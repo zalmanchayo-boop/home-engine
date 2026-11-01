@@ -1,0 +1,8 @@
+.venv
+.env
+data/
+uploads/
+hae-uploads/
+__pycache__/
+*.pyc
+*.db

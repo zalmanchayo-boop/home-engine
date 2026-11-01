@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: home-engine
+    runtime: docker
+    plan: starter            # persistent disks require a paid instance
+    region: virginia
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATA_DIR
+        value: /var/data
+      - key: UPLOAD_DIR
+        value: /var/data/uploads
+      - key: COOKIE_SECURE
+        value: "1"
+      - key: ADMIN_PASSWORD
+        generateValue: true  # read it in Render dashboard > Environment
+      - key: NATIONAL_RATE_FEED_URL
+        sync: false
+    disk:
+      name: data
+      mountPath: /var/data
+      sizeGB: 1

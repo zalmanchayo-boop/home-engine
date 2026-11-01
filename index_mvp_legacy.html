@@ -1,0 +1,1798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Affordability</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f7f7f5;
+      --surface: #ffffff;
+      --ink: #0b0b0b;
+      --secondary: #6b6b6b;
+      --tertiary: #9b9b9b;
+      --line: #ebebea;
+      --green: #00c805;
+      --green-deep: #00a004;
+      --green-soft: rgba(0, 200, 5, 0.08);
+      --amber: #f5a623;
+      --amber-soft: rgba(245, 166, 35, 0.12);
+      --red: #ff5000;
+      --red-soft: rgba(255, 80, 0, 0.1);
+      --radius: 20px;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-left: env(safe-area-inset-left, 0px);
+      --safe-right: env(safe-area-inset-right, 0px);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body {
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      padding-left: var(--safe-left);
+      padding-right: var(--safe-right);
+      padding-bottom: calc(var(--safe-bottom) + 1rem);
+    }
+
+    .app {
+      width: min(1080px, calc(100% - 2.5rem));
+      margin: 0 auto;
+      padding: calc(2.5rem + var(--safe-top)) 0 5rem;
+    }
+
+    .top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2.75rem;
+      gap: 0.75rem;
+    }
+
+    .logo {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .logo i {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      display: inline-block;
+    }
+
+    .top-meta {
+      font-size: 0.75rem;
+      color: var(--tertiary);
+      font-weight: 500;
+      text-align: right;
+    }
+
+    .hero {
+      margin-bottom: 2.5rem;
+      max-width: 28rem;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(1.75rem, 4.2vw, 2.75rem);
+      font-weight: 600;
+      letter-spacing: -0.045em;
+      line-height: 1.05;
+    }
+
+    .hero p {
+      margin: 0.85rem 0 0;
+      color: var(--secondary);
+      font-size: 1.02rem;
+      line-height: 1.45;
+      letter-spacing: -0.015em;
+      max-width: 34ch;
+    }
+
+    /* Mobile sticky housing summary */
+    .mobile-summary {
+      display: none;
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      margin: 0 0 1rem;
+      padding: 0.85rem 1rem;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    }
+    .mobile-summary .ms-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+    .mobile-summary .ms-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--tertiary);
+    }
+    .mobile-summary .ms-value {
+      font-size: 1.35rem;
+      font-weight: 600;
+      letter-spacing: -0.04em;
+      font-variant-numeric: tabular-nums;
+    }
+    .mobile-summary .ms-value.good { color: var(--green-deep); }
+    .mobile-summary .ms-value.warn { color: #c47a00; }
+    .mobile-summary .ms-value.bad { color: var(--red); }
+    .mobile-summary .ms-sub {
+      margin-top: 0.25rem;
+      font-size: 0.78rem;
+      color: var(--secondary);
+      letter-spacing: -0.01em;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      align-items: start;
+    }
+
+    .stack { display: flex; flex-direction: column; gap: 0.85rem; }
+
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 1.35rem 1.4rem 1.45rem;
+      border: 1px solid transparent;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+
+    .card h2 {
+      margin: 0 0 1.1rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--tertiary);
+    }
+
+    .fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.9rem 0.85rem;
+    }
+
+    .field.full, label.full { grid-column: 1 / -1; }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--secondary);
+      letter-spacing: -0.01em;
+    }
+
+    .control {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    /* 16px+ inputs prevent iOS zoom-jank */
+    input, select {
+      width: 100%;
+      appearance: none;
+      -webkit-appearance: none;
+      font: inherit;
+      font-size: 16px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      background: var(--bg);
+      border: 1px solid transparent;
+      border-radius: 12px;
+      padding: 0.85rem 0.95rem;
+      min-height: 48px;
+      outline: none;
+      transition: background 0.15s, box-shadow 0.15s;
+    }
+
+    .control.prefix input { padding-left: 1.55rem; }
+    .control.suffix input { padding-right: 1.85rem; }
+
+    .affix {
+      position: absolute;
+      color: var(--tertiary);
+      font-size: 0.95rem;
+      font-weight: 500;
+      pointer-events: none;
+    }
+    .control.prefix .affix { left: 0.85rem; }
+    .control.suffix .affix { right: 0.85rem; }
+
+    input:focus, select:focus {
+      background: #fff;
+      box-shadow: 0 0 0 2px rgba(0, 200, 5, 0.35);
+    }
+
+    input::placeholder { color: #c4c4c4; font-weight: 400; }
+
+    /* Typeahead */
+    .typeahead { position: relative; }
+    .typeahead-list {
+      display: none;
+      position: absolute;
+      left: 0; right: 0;
+      top: calc(100% + 4px);
+      z-index: 50;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+      max-height: min(280px, 50vh);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 0.35rem;
+    }
+    .typeahead-list.open { display: block; }
+    .typeahead-item {
+      display: block;
+      width: 100%;
+      text-align: left;
+      border: 0;
+      background: transparent;
+      font: inherit;
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      padding: 0.85rem 0.9rem;
+      min-height: 48px;
+      border-radius: 10px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .typeahead-item:active,
+    .typeahead-item.active,
+    .typeahead-item:focus {
+      background: var(--green-soft);
+      outline: none;
+    }
+    .typeahead-item small {
+      display: block;
+      margin-top: 0.15rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--tertiary);
+    }
+    .typeahead-empty {
+      padding: 0.9rem;
+      font-size: 0.85rem;
+      color: var(--tertiary);
+    }
+
+    .suggest-banner {
+      display: none;
+      grid-column: 1 / -1;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.65rem 0.85rem;
+      border-radius: 12px;
+      background: var(--green-soft);
+      color: var(--green-deep);
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+    }
+    .suggest-banner.show { display: flex; }
+    .suggest-banner.edited {
+      background: var(--amber-soft);
+      color: #9a6200;
+    }
+
+    .panel {
+      position: sticky;
+      top: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .result {
+      padding: 1.6rem 1.5rem 1.5rem;
+      min-height: 18rem;
+    }
+
+    .result-kicker {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--tertiary);
+      margin: 0;
+    }
+
+    .big {
+      margin: 0.55rem 0 0.15rem;
+      font-size: clamp(2.5rem, 7vw, 3.75rem);
+      font-weight: 600;
+      letter-spacing: -0.055em;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+      transition: color 0.2s;
+    }
+
+    .big.good { color: var(--green-deep); }
+    .big.warn { color: #c47a00; }
+    .big.bad { color: var(--red); }
+
+    .subline {
+      margin: 0;
+      color: var(--secondary);
+      font-size: 0.9rem;
+      letter-spacing: -0.015em;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-top: 1.1rem;
+      padding: 0.45rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      background: var(--green-soft);
+      color: var(--green-deep);
+    }
+
+    .status.warn { background: var(--amber-soft); color: #9a6200; }
+    .status.bad { background: var(--red-soft); color: var(--red); }
+    .status::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .min-income {
+      margin-top: 1.25rem;
+      padding: 1rem 1.05rem;
+      border-radius: 14px;
+      background: var(--bg);
+      border: 1px solid var(--line);
+    }
+    .min-income .mi-kicker {
+      margin: 0;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--tertiary);
+    }
+    .min-income .mi-value {
+      margin: 0.35rem 0 0;
+      font-size: 1.45rem;
+      font-weight: 600;
+      letter-spacing: -0.04em;
+      font-variant-numeric: tabular-nums;
+    }
+    .min-income .mi-annual {
+      margin: 0.2rem 0 0;
+      font-size: 0.82rem;
+      color: var(--secondary);
+      letter-spacing: -0.01em;
+    }
+    .min-income.short .mi-value { color: var(--red); }
+
+    .spark {
+      margin-top: 1.35rem;
+      height: 48px;
+    }
+
+    .spark svg { width: 100%; height: 100%; display: block; }
+
+    .rows {
+      margin-top: 1.35rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 1rem;
+      font-size: 0.9rem;
+      letter-spacing: -0.015em;
+    }
+
+    .row span { color: var(--secondary); }
+    .row strong {
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--line);
+      margin: 0.15rem 0;
+      border: 0;
+    }
+
+    .meters { margin-top: 1.35rem; display: flex; flex-direction: column; gap: 1rem; }
+
+    .meter-head {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--secondary);
+      margin-bottom: 0.4rem;
+      letter-spacing: -0.01em;
+    }
+
+    .meter-head b { color: var(--ink); font-weight: 600; }
+
+    .track {
+      height: 4px;
+      background: var(--line);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .track > i {
+      display: block;
+      height: 100%;
+      width: 0;
+      border-radius: inherit;
+      background: var(--green);
+      transition: width 0.3s ease, background 0.2s;
+    }
+
+    .ghost {
+      width: 100%;
+      margin-top: 0.15rem;
+      border: none;
+      background: transparent;
+      color: var(--secondary);
+      font: inherit;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 0.65rem 0;
+      min-height: 44px;
+      text-align: left;
+      letter-spacing: -0.01em;
+    }
+
+    .ghost:hover { color: var(--ink); }
+
+    .cta {
+      background: var(--ink);
+      color: #fff;
+      padding: 1.35rem 1.4rem 1.4rem;
+    }
+
+    .cta h3 {
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+    }
+
+    .cta p {
+      margin: 0.45rem 0 0;
+      color: rgba(255,255,255,0.62);
+      font-size: 0.88rem;
+      line-height: 1.4;
+      letter-spacing: -0.01em;
+    }
+
+    .cta button {
+      margin-top: 1.1rem;
+      width: 100%;
+      border: 0;
+      border-radius: 999px;
+      padding: 1rem 1rem;
+      min-height: 52px;
+      font: inherit;
+      font-weight: 600;
+      font-size: 0.95rem;
+      letter-spacing: -0.02em;
+      background: var(--green);
+      color: #003300;
+      cursor: pointer;
+      transition: filter 0.15s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .cta button:hover { filter: brightness(1.05); }
+    .cta button:active { transform: scale(0.985); }
+
+    .foot {
+      margin-top: 2.75rem;
+      text-align: center;
+      color: var(--tertiary);
+      font-size: 0.75rem;
+      line-height: 1.5;
+      letter-spacing: -0.01em;
+      max-width: 42rem;
+      margin-left: auto;
+      margin-right: auto;
+      padding: 0 0.5rem;
+    }
+
+    /* —— Mobile-first overrides (~390px) —— */
+    @media (max-width: 860px) {
+      .app {
+        width: calc(100% - 1.5rem);
+        padding: calc(1.15rem + var(--safe-top)) 0 4rem;
+      }
+      .top { margin-bottom: 1.25rem; }
+      .hero { margin-bottom: 1.1rem; max-width: none; }
+      .hero p { max-width: none; font-size: 0.95rem; }
+      .mobile-summary { display: block; }
+      .layout { grid-template-columns: 1fr; gap: 0.85rem; }
+      .panel { position: static; }
+      .fields { grid-template-columns: 1fr; gap: 0.85rem; }
+      .card { padding: 1.15rem 1.1rem 1.2rem; border-radius: 16px; }
+      .result { min-height: 0; }
+      .cta { width: 100%; }
+      .typeahead-list {
+        position: fixed;
+        left: 0.75rem;
+        right: 0.75rem;
+        top: auto;
+        bottom: calc(var(--safe-bottom) + 0.75rem);
+        max-height: 45vh;
+        border-radius: 16px;
+      }
+    }
+
+    /* Mode switch */
+    .mode-switch {
+      display: inline-flex; background: var(--surface); border: 1px solid var(--line);
+      border-radius: 999px; padding: 0.2rem; margin-bottom: 1.5rem; gap: 0.15rem;
+    }
+    .mode-switch button {
+      border: 0; background: transparent; font: inherit; font-size: 0.85rem; font-weight: 600;
+      letter-spacing: -0.02em; color: var(--secondary); padding: 0.65rem 1.15rem;
+      min-height: 44px; border-radius: 999px; cursor: pointer;
+      transition: background 0.15s, color 0.15s; -webkit-tap-highlight-color: transparent;
+    }
+    .mode-switch button.active { background: var(--ink); color: #fff; }
+
+    .label-row { display: flex; align-items: center; gap: 0.35rem; }
+
+    .tip {
+      position: relative; display: inline-flex; align-items: center; justify-content: center;
+      width: 18px; height: 18px; border-radius: 50%; background: var(--bg); border: 1px solid var(--line);
+      color: var(--tertiary); font-size: 0.68rem; font-weight: 700; cursor: pointer; flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent; padding: 0; font-family: inherit;
+    }
+    .tip:focus, .tip:hover { color: var(--ink); border-color: #ccc; }
+    .tip[data-open="1"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+    .tip-pop {
+      display: none; position: absolute; z-index: 60; left: 0; top: calc(100% + 8px);
+      width: min(260px, 70vw); padding: 0.75rem 0.85rem; background: var(--ink); color: #fff;
+      font-size: 0.75rem; font-weight: 500; line-height: 1.4; letter-spacing: -0.01em;
+      border-radius: 12px; box-shadow: 0 8px 28px rgba(0,0,0,0.2); text-transform: none;
+    }
+    .tip[data-open="1"] .tip-pop { display: block; }
+    .tip-pop::before {
+      content: ""; position: absolute; top: -5px; left: 10px; width: 10px; height: 10px;
+      background: var(--ink); transform: rotate(45deg); border-radius: 2px;
+    }
+
+    .advanced-toggle {
+      display: flex; align-items: center; justify-content: space-between; width: 100%;
+      border: 0; background: transparent; font: inherit; font-size: 0.82rem; font-weight: 600;
+      letter-spacing: -0.01em; color: var(--ink); padding: 0.35rem 0; min-height: 44px;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+    .advanced-toggle .chev {
+      width: 18px; height: 18px; border-radius: 50%; background: var(--bg);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; color: var(--secondary); transition: transform 0.2s;
+    }
+    .advanced-toggle[aria-expanded="true"] .chev { transform: rotate(180deg); }
+    .advanced-body { display: none; margin-top: 0.85rem; }
+    .advanced-body.open { display: block; }
+    .advanced-hint { margin: 0 0 0.85rem; font-size: 0.75rem; color: var(--tertiary); letter-spacing: -0.01em; }
+
+    .debts-compact {
+      display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+      padding: 0.85rem 1rem; background: var(--bg); border-radius: 12px; margin-bottom: 0.75rem;
+    }
+    .debts-compact .dc-label { font-size: 0.78rem; font-weight: 500; color: var(--secondary); }
+    .debts-compact .dc-value { font-size: 1rem; font-weight: 600; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+    .debts-expand-btn {
+      border: 0; background: transparent; font: inherit; font-size: 0.78rem; font-weight: 600;
+      color: var(--green-deep); cursor: pointer; padding: 0.35rem 0.5rem; min-height: 36px;
+    }
+    .debts-detail { display: none; }
+    .debts-detail.open { display: grid; }
+
+    .pmi-note { grid-column: 1 / -1; font-size: 0.72rem; color: var(--tertiary); letter-spacing: -0.01em; margin-top: -0.35rem; }
+    .pmi-note.active { color: #9a6200; }
+
+    .income-bands { margin-top: 1.25rem; display: grid; gap: 0.65rem; }
+    .band-card { padding: 0.9rem 1rem; border-radius: 14px; background: var(--bg); border: 1px solid var(--line); }
+    .band-card.primary { background: var(--green-soft); border-color: transparent; }
+    .band-card.short { background: var(--red-soft); border-color: transparent; }
+    .band-card .bc-kicker {
+      margin: 0; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+      color: var(--tertiary); display: flex; align-items: center; gap: 0.3rem;
+    }
+    .band-card.primary .bc-kicker { color: var(--green-deep); }
+    .band-card .bc-value { margin: 0.3rem 0 0; font-size: 1.35rem; font-weight: 600; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+    .band-card .bc-sub { margin: 0.15rem 0 0; font-size: 0.78rem; color: var(--secondary); letter-spacing: -0.01em; }
+
+    .price-pair { margin-top: 1.25rem; display: grid; gap: 0.65rem; }
+    .price-card { padding: 1rem 1.05rem; border-radius: 14px; background: var(--bg); border: 1px solid var(--line); }
+    .price-card.hi { background: var(--green-soft); border-color: transparent; }
+    .price-card .pc-kicker { margin: 0; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--tertiary); }
+    .price-card.hi .pc-kicker { color: var(--green-deep); }
+    .price-card .pc-value { margin: 0.35rem 0 0; font-size: 1.65rem; font-weight: 600; letter-spacing: -0.045em; font-variant-numeric: tabular-nums; }
+    .price-card .pc-sub { margin: 0.2rem 0 0; font-size: 0.78rem; color: var(--secondary); }
+
+    .dti-track { position: relative; }
+    .track-marks { position: absolute; inset: 0; pointer-events: none; }
+    .track-marks::before, .track-marks::after {
+      content: ""; position: absolute; top: -2px; width: 2px; height: 8px;
+      background: rgba(0,0,0,0.15); border-radius: 1px;
+    }
+    .dti-track .track-marks::before { left: 60%; }
+    .dti-track .track-marks::after { left: 75%; }
+
+    .band-legend {
+      display: flex; flex-wrap: wrap; gap: 0.65rem 1rem; margin-top: 0.75rem;
+      font-size: 0.7rem; color: var(--tertiary); letter-spacing: -0.01em;
+    }
+    .band-legend span::before {
+      content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+      margin-right: 0.35rem; vertical-align: middle;
+    }
+    .band-legend .lg-aff::before { background: var(--green); }
+    .band-legend .lg-str::before { background: var(--amber); }
+    .band-legend .lg-max::before { background: var(--red); }
+
+    .cta { display: none; }
+    .cta.show { display: block; }
+
+    .mode-wrap { display: none; }
+    .mode-wrap.active { display: flex; flex-direction: column; gap: 0.85rem; }
+
+    .suggest-banner { cursor: pointer; border: 0; font-family: inherit; text-align: left; width: 100%; }
+
+    @media (max-width: 860px) {
+      .mode-switch { width: 100%; }
+      .mode-switch button { flex: 1; padding: 0.65rem 0.5rem; font-size: 0.8rem; }
+      .tip-pop { left: auto; right: 0; }
+      .tip-pop::before { left: auto; right: 10px; }
+    }
+
+    /* alias patches */
+
+    .dc-label { font-size: 0.78rem; font-weight: 500; color: var(--secondary); }
+    .dc-value { font-size: 1rem; font-weight: 600; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+    .debts-expand-btn { border: 0; background: transparent; font: inherit; font-size: 0.78rem; font-weight: 600; color: var(--green-deep); cursor: pointer; padding: 0.35rem 0.5rem; min-height: 36px; }
+    .debts-detail { display: none; }
+    .debts-detail.open { display: grid; }
+    .pmi-note { grid-column: 1 / -1; font-size: 0.72rem; color: var(--tertiary); letter-spacing: -0.01em; margin-top: -0.35rem; }
+    .pmi-note.active { color: #9a6200; }
+    .advanced-hint { margin: 0 0 0.85rem; font-size: 0.75rem; color: var(--tertiary); }
+    .label-row { display: flex; align-items: center; gap: 0.35rem; }
+    .big { margin: 0.55rem 0 0.15rem; font-size: clamp(2.5rem, 7vw, 3.75rem); font-weight: 600; letter-spacing: -0.055em; line-height: 1; font-variant-numeric: tabular-nums; }
+    .big.good { color: var(--green-deep); } .big.warn { color: #c47a00; } .big.bad { color: var(--red); }
+    .subline { margin: 0; color: var(--secondary); font-size: 0.9rem; }
+    .result-kicker { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tertiary); margin: 0; }
+    .income-bands { margin-top: 1.25rem; display: grid; gap: 0.65rem; }
+    .band-card { padding: 0.9rem 1rem; border-radius: 14px; background: var(--bg); border: 1px solid var(--line); }
+    .band-card.primary { background: var(--green-soft); border-color: transparent; }
+    .band-card.short { background: var(--red-soft); border-color: transparent; }
+    .band-card .bc-kicker { margin: 0; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--tertiary); display: flex; align-items: center; gap: 0.3rem; }
+    .band-card.primary .bc-kicker { color: var(--green-deep); }
+    .band-card .bc-value { margin: 0.3rem 0 0; font-size: 1.35rem; font-weight: 600; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+    .band-card .bc-sub { margin: 0.15rem 0 0; font-size: 0.78rem; color: var(--secondary); }
+    .meters { margin-top: 1.35rem; display: flex; flex-direction: column; gap: 1rem; }
+    .meter-head { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--secondary); margin-bottom: 0.4rem; }
+    .meter-head b { color: var(--ink); font-weight: 600; }
+    .dti-track { position: relative; }
+    .track-marks { position: absolute; inset: 0; pointer-events: none; }
+    .track-marks::before, .track-marks::after { content: ""; position: absolute; top: -2px; width: 2px; height: 8px; background: rgba(0,0,0,0.15); border-radius: 1px; }
+    .dti-track .track-marks::before { left: 60%; }
+    .dti-track .track-marks::after { left: 75%; }
+    .band-legend { display: flex; flex-wrap: wrap; gap: 0.65rem 1rem; margin-top: 0.75rem; font-size: 0.7rem; color: var(--tertiary); }
+    .band-legend span::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 0.35rem; vertical-align: middle; }
+    .band-legend .lg-aff::before { background: var(--green); }
+    .band-legend .lg-str::before { background: var(--amber); }
+    .band-legend .lg-max::before { background: var(--red); }
+    .price-pair { margin-top: 1.25rem; display: grid; gap: 0.65rem; }
+    .price-card { padding: 1rem 1.05rem; border-radius: 14px; background: var(--bg); border: 1px solid var(--line); }
+    .price-card.hi { background: var(--green-soft); border-color: transparent; }
+    .price-card .pc-kicker { margin: 0; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--tertiary); }
+    .price-card.hi .pc-kicker { color: var(--green-deep); }
+    .price-card .pc-value { margin: 0.35rem 0 0; font-size: 1.65rem; font-weight: 600; letter-spacing: -0.045em; font-variant-numeric: tabular-nums; }
+    .price-card .pc-sub { margin: 0.2rem 0 0; font-size: 0.78rem; color: var(--secondary); }
+    .row.muted strong { color: var(--tertiary); }
+    .ms-row { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+    .ms-label { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--tertiary); }
+    .ms-value { font-size: 1.35rem; font-weight: 600; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+    .ms-value.good { color: var(--green-deep); } .ms-value.warn { color: #c47a00; } .ms-value.bad { color: var(--red); }
+    .ms-sub { margin-top: 0.25rem; font-size: 0.78rem; color: var(--secondary); }
+
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <div class="top">
+      <div class="logo"><i></i> Affordability</div>
+      <div class="top-meta">Estimate · not a commitment to lend</div>
+    </div>
+
+    <div class="hero">
+      <h1 id="heroTitle">See if the home fits your month.</h1>
+      <p id="heroSub">Payment, taxes, insurance, PMI, and the debts you already carry — in one clear number.</p>
+    </div>
+
+    <div class="mode-switch" role="tablist" aria-label="Calculator mode">
+      <button type="button" class="active" id="modeThisHome" role="tab" aria-selected="true">This home</button>
+      <button type="button" id="modeHowMuch" role="tab" aria-selected="false">How much house</button>
+    </div>
+
+    <div class="mobile-summary" id="mobileSummary" aria-live="polite">
+      <div class="ms-row">
+        <div>
+          <div class="ms-label" id="msLabel">Monthly housing</div>
+          <div class="ms-sub" id="msSub">P&amp;I · taxes · insurance · HOA · PMI</div>
+        </div>
+        <div class="ms-value good" id="msHousing">$0</div>
+      </div>
+    </div>
+
+    <div class="layout">
+      <div class="stack">
+        <div class="mode-wrap active" id="wrapThisHome">
+          <section class="card">
+            <h2>Home</h2>
+            <div class="fields">
+              <label class="full">Address
+                <div class="typeahead" id="typeahead">
+                  <input id="address" type="text" placeholder="Start typing an address" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search" />
+                  <div class="typeahead-list" id="suggestList" role="listbox" aria-label="Address suggestions"></div>
+                </div>
+              </label>
+              <button type="button" class="suggest-banner" id="suggestBanner">Suggested — tap to edit</button>
+              <label>Price
+                <div class="control prefix"><span class="affix">$</span>
+                  <input id="price" type="number" inputmode="decimal" min="0" step="1000" value="875000" />
+                </div>
+              </label>
+              <label>Down payment
+                <div class="control prefix"><span class="affix">$</span>
+                  <input id="down" type="number" inputmode="decimal" min="0" step="1000" value="87500" />
+                </div>
+              </label>
+              <label>Rate
+                <div class="control suffix">
+                  <input id="rate" type="number" inputmode="decimal" min="0" max="20" step="0.01" value="6.75" />
+                  <span class="affix">%</span>
+                </div>
+              </label>
+              <label>Term
+                <select id="term">
+                  <option value="30" selected>30 years</option>
+                  <option value="20">20 years</option>
+                  <option value="15">15 years</option>
+                  <option value="10">10 years</option>
+                </select>
+              </label>
+            </div>
+          </section>
+
+          <section class="card">
+            <button type="button" class="advanced-toggle" id="advToggle" aria-expanded="false" aria-controls="advBody">
+              <span class="label-row">
+                Ownership costs
+                <span class="tip" role="button" tabindex="0" data-tip="escrow" aria-label="About escrow and taxes">?<span class="tip-pop">Property taxes and homeowners insurance are often collected in an escrow account. HOA fees are paid separately to the association.</span></span>
+              </span>
+              <span class="chev">▾</span>
+            </button>
+            <div class="advanced-body" id="advBody">
+              <p class="advanced-hint">Taxes, insurance, HOA, and PMI — autofilled from listing when available.</p>
+              <div class="fields">
+                <label>
+                  <span class="label-row">Taxes / year
+                    <span class="tip" role="button" tabindex="0" data-tip="escrow" aria-label="About taxes">?<span class="tip-pop">Annual property tax. Often escrowed monthly (divided by 12) into your housing payment.</span></span>
+                  </span>
+                  <div class="control prefix"><span class="affix">$</span>
+                    <input id="tax" type="number" inputmode="decimal" min="0" step="100" value="8400" />
+                  </div>
+                </label>
+                <label>Insurance / year
+                  <div class="control prefix"><span class="affix">$</span>
+                    <input id="ins" type="number" inputmode="decimal" min="0" step="50" value="2800" />
+                  </div>
+                </label>
+                <label>
+                  <span class="label-row">HOA / month
+                    <span class="tip" role="button" tabindex="0" data-tip="hoa" aria-label="About HOA">?<span class="tip-pop">Homeowners association dues for shared amenities or building upkeep. Added to monthly housing cost.</span></span>
+                  </span>
+                  <div class="control prefix"><span class="affix">$</span>
+                    <input id="hoa" type="number" inputmode="decimal" min="0" step="10" value="0" />
+                  </div>
+                </label>
+                <label>
+                  <span class="label-row">PMI / month
+                    <span class="tip" role="button" tabindex="0" data-tip="pmi" aria-label="About PMI">?<span class="tip-pop">Private mortgage insurance. Typically required when down payment is under 20% (LTV over 80%). Estimate uses about 0.7% of loan per year divided by 12. Auto-zeros at 20%+ down.</span></span>
+                  </span>
+                  <div class="control prefix"><span class="affix">$</span>
+                    <input id="pmi" type="number" inputmode="decimal" min="0" step="5" value="0" />
+                  </div>
+                </label>
+                <p class="pmi-note" id="pmiNote">PMI applies when down payment is under 20%.</p>
+                <label class="full">Extra principal / month <span style="font-weight:400;color:var(--tertiary)">(optional)</span>
+                  <div class="control prefix"><span class="affix">$</span>
+                    <input id="extraPrincipal" type="number" inputmode="decimal" min="0" step="25" value="0" />
+                  </div>
+                </label>
+              </div>
+            </div>
+          </section>
+
+          <section class="card">
+            <h2>
+              Monthly debts
+              <span class="tip" role="button" tabindex="0" data-tip="dti" aria-label="About DTI">?<span class="tip-pop">Debt-to-income (DTI) equals housing plus other monthly debts, divided by gross monthly income. We use 45% for minimum required income and 36% as a comfort target.</span></span>
+            </h2>
+            <div class="debts-compact" id="debtsCompact">
+              <div>
+                <div class="dc-label">Total other debts</div>
+                <div class="dc-value" id="debtsCompactVal">$925</div>
+              </div>
+              <button type="button" class="debts-expand-btn" id="debtsExpandBtn">Edit categories</button>
+            </div>
+            <div class="fields debts-detail" id="debtsDetail">
+              <label>Auto
+                <div class="control prefix"><span class="affix">$</span>
+                  <input id="auto" type="number" inputmode="decimal" min="0" step="10" value="485" />
+                </div>
+              </label>
+              <label>Student loans
+                <div class="control prefix"><span class="affix">$</span>
+                  <input id="student" type="number" inputmode="decimal" min="0" step="10" value="265" />
+                </div>
+              </label>
+              <label>Credit cards
+                <div class="control prefix"><span class="affix">$</span>
+                  <input id="cards" type="number" inputmode="decimal" min="0" step="10" value="175" />
+                </div>
+              </label>
+              <label>Other
+                <div class="control prefix"><span class="affix">$</span>
+                  <input id="otherDebt" type="number" inputmode="decimal" min="0" step="10" value="0" />
+                </div>
+              </label>
+            </div>
+          </section>
+
+          <section class="card">
+            <h2>Income</h2>
+            <div class="fields">
+              <label class="full">Gross monthly
+                <div class="control prefix"><span class="affix">$</span>
+                  <input id="income" type="number" inputmode="decimal" min="0" step="100" value="14500" />
+                </div>
+              </label>
+            </div>
+          </section>
+        </div>
+
+        <div class="mode-wrap" id="wrapHowMuch">
+          <section class="card">
+            <h2>Your budget</h2>
+            <div class="fields">
+              <label class="full">Gross monthly income
+                <div class="control prefix"><span class="affix">$</span>
+                  <input id="hmIncome" type="number" inputmode="decimal" min="0" step="100" value="14500" />
+                </div>
+              </label>
+              <label>Other monthly debts
+                <div class="control prefix"><span class="affix">$</span>
+                  <input id="hmDebts" type="number" inputmode="decimal" min="0" step="10" value="925" />
+                </div>
+              </label>
+              <label>Down payment
+                <div class="control suffix">
+                  <input id="hmDownPct" type="number" inputmode="decimal" min="0" max="95" step="1" value="10" />
+                  <span class="affix">%</span>
+                </div>
+              </label>
+              <label>Rate
+                <div class="control suffix">
+                  <input id="hmRate" type="number" inputmode="decimal" min="0" max="20" step="0.01" value="6.75" />
+                  <span class="affix">%</span>
+                </div>
+              </label>
+              <label>Term
+                <select id="hmTerm">
+                  <option value="30" selected>30 years</option>
+                  <option value="20">20 years</option>
+                  <option value="15">15 years</option>
+                  <option value="10">10 years</option>
+                </select>
+              </label>
+            </div>
+          </section>
+
+          <section class="card">
+            <button type="button" class="advanced-toggle" id="hmAdvToggle" aria-expanded="false" aria-controls="hmAdvBody">
+              <span>Ownership cost assumptions</span>
+              <span class="chev">▾</span>
+            </button>
+            <div class="advanced-body" id="hmAdvBody">
+              <p class="advanced-hint">Tax and insurance scale with price as a percent of home value.</p>
+              <div class="fields">
+                <label>Tax rate / year
+                  <div class="control suffix">
+                    <input id="hmTaxRate" type="number" inputmode="decimal" min="0" max="5" step="0.05" value="1.0" />
+                    <span class="affix">%</span>
+                  </div>
+                </label>
+                <label>Insurance rate / year
+                  <div class="control suffix">
+                    <input id="hmInsRate" type="number" inputmode="decimal" min="0" max="5" step="0.05" value="0.35" />
+                    <span class="affix">%</span>
+                  </div>
+                </label>
+                <label>
+                  <span class="label-row">HOA / month
+                    <span class="tip" role="button" tabindex="0" data-tip="hoa" aria-label="About HOA">?<span class="tip-pop">Homeowners association dues. Fixed monthly amount in this estimate.</span></span>
+                  </span>
+                  <div class="control prefix"><span class="affix">$</span>
+                    <input id="hmHoa" type="number" inputmode="decimal" min="0" step="10" value="0" />
+                  </div>
+                </label>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <aside class="panel">
+        <section class="card result" id="resultThisHome">
+          <p class="result-kicker">Monthly housing</p>
+          <div class="big good" id="housingTotal">$0</div>
+          <p class="subline" id="housingSub">P&amp;I · taxes · insurance · HOA · PMI</p>
+          <div class="status good" id="statusPill">Looks workable</div>
+
+          <div class="income-bands">
+            <div class="band-card primary" id="minIncomeBox">
+              <p class="bc-kicker">
+                Min income @ 45% DTI
+                <span class="tip" role="button" tabindex="0" data-tip="dti45" aria-label="About 45% vs 36%">?<span class="tip-pop">45% is our fixed rule for minimum required income: (housing + debts) ÷ 0.45. 36% is a common comfort target — many borrowers aim to stay at or under it.</span></span>
+              </p>
+              <p class="bc-value" id="minMonthly">$0</p>
+              <p class="bc-sub" id="minAnnual">$0 / year</p>
+            </div>
+            <div class="band-card" id="comfortIncomeBox">
+              <p class="bc-kicker">Comfort income @ 36% DTI</p>
+              <p class="bc-value" id="comfortMonthly">$0</p>
+              <p class="bc-sub" id="comfortAnnual">$0 / year</p>
+            </div>
+          </div>
+
+          <div class="spark" aria-hidden="true">
+            <svg viewBox="0 0 320 48" preserveAspectRatio="none">
+              <path id="sparkPath" fill="none" stroke="#00c805" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" d=""></path>
+            </svg>
+          </div>
+
+          <div class="rows">
+            <div class="row"><span>Principal &amp; interest</span><strong id="pi">$0</strong></div>
+            <div class="row"><span>Taxes</span><strong id="taxM">$0</strong></div>
+            <div class="row"><span>Insurance</span><strong id="insM">$0</strong></div>
+            <div class="row"><span>HOA</span><strong id="hoaM">$0</strong></div>
+            <div class="row" id="pmiRow"><span>PMI</span><strong id="pmiM">$0</strong></div>
+            <div class="row muted" id="extraRow" hidden><span>Extra principal</span><strong id="extraM">$0</strong></div>
+            <hr class="divider" />
+            <div class="row"><span>Other debts</span><strong id="debtsTotal">$0</strong></div>
+            <div class="row"><span>All obligations</span><strong id="allObligations">$0</strong></div>
+            <div class="row"><span>Left each month</span><strong id="leftover">$0</strong></div>
+          </div>
+
+          <div class="meters">
+            <div>
+              <div class="meter-head"><span>Housing ratio</span><b id="housingPctLabel">0%</b></div>
+              <div class="track"><i id="housingBar"></i></div>
+            </div>
+            <div>
+              <div class="meter-head">
+                <span class="label-row">Total DTI
+                  <span class="tip" role="button" tabindex="0" data-tip="dti" aria-label="About DTI">?<span class="tip-pop">Debt-to-income. Affordable ≤36%, Stretch 36–45%, Stretched &gt;45%.</span></span>
+                </span>
+                <b id="dtiPctLabel">0%</b>
+              </div>
+              <div class="track dti-track"><i id="dtiBar"></i><div class="track-marks"></div></div>
+            </div>
+          </div>
+          <div class="band-legend">
+            <span class="lg-aff">Affordable ≤36%</span>
+            <span class="lg-str">Stretch 36–45%</span>
+            <span class="lg-max">Stretched &gt;45%</span>
+          </div>
+
+          <button type="button" class="ghost" id="loadDemo">Reset to sample numbers</button>
+        </section>
+
+        <section class="card result" id="resultHowMuch" hidden>
+          <p class="result-kicker">You could look at</p>
+          <div class="big good" id="hmMaxPrice">$0</div>
+          <p class="subline">Max home price at 45% DTI</p>
+          <div class="status good" id="hmStatusPill">Dual band estimate</div>
+
+          <div class="price-pair">
+            <div class="price-card hi">
+              <p class="pc-kicker">Max @ 45% DTI</p>
+              <p class="pc-value" id="hmMaxPriceCard">$0</p>
+              <p class="pc-sub" id="hmMaxSub">Housing payment · down · PMI if needed</p>
+            </div>
+            <div class="price-card">
+              <p class="pc-kicker">Comfort @ 36% DTI</p>
+              <p class="pc-value" id="hmComfortPrice">$0</p>
+              <p class="pc-sub" id="hmComfortSub">More breathing room each month</p>
+            </div>
+          </div>
+
+          <div class="rows" style="margin-top:1.25rem">
+            <div class="row"><span>Down payment</span><strong id="hmDownAmt">$0</strong></div>
+            <div class="row"><span>Loan amount</span><strong id="hmLoan">$0</strong></div>
+            <div class="row"><span>Est. housing / mo</span><strong id="hmHousing">$0</strong></div>
+            <div class="row"><span>Incl. PMI</span><strong id="hmPmi">$0</strong></div>
+          </div>
+        </section>
+
+        <section class="cta card" id="ctaCard">
+          <h3>Save this scenario</h3>
+          <p>Optional alerts if the payment picture shifts. No hard email wall — preview stays free.</p>
+          <button type="button" id="alertBtn">Save scenario / turn on alerts</button>
+        </section>
+      </aside>
+    </div>
+
+    <p class="foot">
+      Estimates only. Not a commitment to lend. Actual qualification depends on credit, assets, property, and guidelines.
+      Minimum income uses a fixed 45% total DTI rule; 36% is shown as a comfort target. PMI estimated at about 0.7% of loan / year when down is under 20%.
+    </p>
+  </div>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const money = (n) => (Number.isFinite(n) ? n : 0).toLocaleString("en-US", {
+    style: "currency", currency: "USD", maximumFractionDigits: 0,
+  });
+  const PMI_ANNUAL = 0.007;
+  const DTI_RULE = 0.45;
+  const DTI_COMFORT = 0.36;
+
+  function num(id) {
+    const el = $(id);
+    if (!el) return 0;
+    const v = parseFloat(el.value);
+    return Number.isFinite(v) ? v : 0;
+  }
+
+  function detectDevice() {
+    const w = Math.min(window.innerWidth || 0, document.documentElement.clientWidth || 0) || window.innerWidth;
+    const ua = navigator.userAgent || "";
+    const uaTablet = /iPad|Tablet|Android(?!.*Mobile)/i.test(ua);
+    const uaPhone = /iPhone|iPod|Android.*Mobile|Windows Phone|Mobile/i.test(ua);
+    if (uaTablet || (w >= 600 && w <= 1024 && !uaPhone)) return "tablet";
+    if (uaPhone || w < 600) return "phone";
+    return "desktop";
+  }
+
+  function getSessionId() {
+    const key = "hae_session_id";
+    let id = localStorage.getItem(key);
+    if (!id) {
+      id = (crypto.randomUUID && crypto.randomUUID()) ||
+        ("s-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10));
+      localStorage.setItem(key, id);
+    }
+    return id;
+  }
+
+  const sessionId = getSessionId();
+  let device = detectDevice();
+  let mode = "this_home";
+  let autofilled = false;
+  let autofillSnapshot = null;
+  let suggestTimer = null;
+  let editTimer = null;
+  let calcServerTimer = null;
+  let activeIndex = -1;
+  let lastSuggestions = [];
+  let lastServerCalc = null;
+  let suppressEditLog = false;
+  let pmiUserEdited = false;
+  let hasResults = false;
+
+  function payment(principal, annualRatePct, years) {
+    if (principal <= 0) return 0;
+    const r = annualRatePct / 100 / 12;
+    const n = years * 12;
+    if (r === 0) return principal / n;
+    return (principal * (r * Math.pow(1 + r, n))) / (Math.pow(1 + r, n) - 1);
+  }
+
+  function estimatePmi(loan, price) {
+    if (price <= 0 || loan <= 0) return 0;
+    if (loan / price <= 0.8) return 0;
+    return (loan * PMI_ANNUAL) / 12;
+  }
+
+  function debtsTotal() {
+    return num("auto") + num("student") + num("cards") + num("otherDebt");
+  }
+
+  function setTone(el, tone) {
+    if (!el) return;
+    el.classList.remove("good", "warn", "bad");
+    if (tone) el.classList.add(tone);
+  }
+
+  function drawSpark(ratio) {
+    const path = $("sparkPath");
+    if (!path) return;
+    const w = 320, h = 48, mid = h * 0.55;
+    let d = "M 0 " + mid;
+    for (let x = 0; x <= w; x += 8) {
+      const t = x / w;
+      const wave = Math.sin(t * Math.PI * 2.2) * 8;
+      const drift = (0.5 - Math.min(ratio, 1.2) / 1.2) * 18;
+      const y = mid + wave * (0.4 + t) - drift * t;
+      d += " L " + x + " " + y.toFixed(2);
+    }
+    path.setAttribute("d", d);
+    path.setAttribute("stroke", ratio <= 0.31 ? "#00c805" : ratio <= 0.36 ? "#f5a623" : "#ff5000");
+  }
+
+  function syncPmiField() {
+    const price = num("price");
+    const down = Math.min(num("down"), price);
+    const loan = Math.max(price - down, 0);
+    const auto = estimatePmi(loan, price);
+    const note = $("pmiNote");
+    if (!note || !$("pmi")) return;
+    if (auto <= 0) {
+      const was = suppressEditLog;
+      suppressEditLog = true;
+      $("pmi").value = 0;
+      suppressEditLog = was;
+      pmiUserEdited = false;
+      note.textContent = "No PMI — down payment is 20% or more.";
+      note.classList.remove("active");
+    } else {
+      if (!pmiUserEdited) {
+        const was = suppressEditLog;
+        suppressEditLog = true;
+        $("pmi").value = Math.round(auto);
+        suppressEditLog = was;
+      }
+      const ltv = ((loan / price) * 100).toFixed(0);
+      note.textContent = "PMI on — LTV ~" + ltv + "%. Estimate ~0.7% of loan / year. Edit to override.";
+      note.classList.add("active");
+    }
+  }
+
+  function updateBanner() {
+    const banner = $("suggestBanner");
+    if (!banner) return;
+    if (!autofilled) {
+      banner.classList.remove("show", "edited");
+      return;
+    }
+    banner.classList.add("show");
+    const cur = {
+      price: num("price"), down: num("down"), tax: num("tax"), ins: num("ins"), hoa: num("hoa"),
+    };
+    const edited = autofillSnapshot && (
+      cur.price !== autofillSnapshot.price || cur.tax !== autofillSnapshot.tax ||
+      cur.ins !== autofillSnapshot.ins || cur.hoa !== autofillSnapshot.hoa ||
+      cur.down !== autofillSnapshot.down
+    );
+    banner.classList.toggle("edited", !!edited);
+    banner.textContent = edited
+      ? "Edited from listing suggestion — tap Ownership costs"
+      : "Suggested — tap to edit";
+  }
+
+  function updateCta() {
+    const cta = $("ctaCard");
+    if (cta) cta.classList.toggle("show", hasResults);
+  }
+
+  function openAdvanced(open) {
+    const body = $("advBody");
+    const btn = $("advToggle");
+    if (!body || !btn) return;
+    body.classList.toggle("open", open);
+    btn.setAttribute("aria-expanded", open ? "true" : "false");
+  }
+
+  function calcThisHome() {
+    syncPmiField();
+    const price = num("price");
+    const down = Math.min(num("down"), price);
+    const loan = Math.max(price - down, 0);
+    const pi = payment(loan, num("rate"), parseInt($("term").value, 10));
+    const taxM = num("tax") / 12;
+    const insM = num("ins") / 12;
+    const hoaM = num("hoa");
+    const pmiM = num("pmi");
+    const extra = num("extraPrincipal");
+    const housing = pi + taxM + insM + hoaM + pmiM + extra;
+    const debts = debtsTotal();
+    const income = num("income");
+    const all = housing + debts;
+    const leftover = income - all;
+    const housingRatio = income > 0 ? housing / income : 0;
+    const dti = income > 0 ? all / income : 0;
+
+    let minMonthly = (housing + debts) / DTI_RULE;
+    let minAnnual = minMonthly * 12;
+    let comfortMonthly = (housing + debts) / DTI_COMFORT;
+    let comfortAnnual = comfortMonthly * 12;
+    let belowMin = income > 0 && income < minMonthly;
+    let tone = "good";
+    let label = "Affordable — at or under 36% comfort DTI";
+    let displayHousing = housing;
+    let displayPmi = pmiM;
+
+    if (lastServerCalc && lastServerCalc.mode !== "how_much_house") {
+      if (typeof lastServerCalc.minMonthlyIncome === "number") {
+        minMonthly = lastServerCalc.minMonthlyIncome;
+        minAnnual = lastServerCalc.minAnnualIncome;
+        belowMin = !!lastServerCalc.incomeBelowMinimum;
+      }
+      if (typeof lastServerCalc.comfortMonthlyIncome === "number") {
+        comfortMonthly = lastServerCalc.comfortMonthlyIncome;
+        comfortAnnual = lastServerCalc.comfortAnnualIncome;
+      }
+      if (lastServerCalc.tone) tone = lastServerCalc.tone;
+      if (lastServerCalc.statusLabel) label = lastServerCalc.statusLabel;
+      if (typeof lastServerCalc.housingPayment === "number") displayHousing = lastServerCalc.housingPayment;
+      if (typeof lastServerCalc.pmiMonthly === "number") displayPmi = lastServerCalc.pmiMonthly;
+    } else {
+      if (income <= 0) { tone = "warn"; label = "Add income for a full read"; }
+      else if (dti <= DTI_COMFORT) { tone = "good"; label = "Affordable — at or under 36% comfort DTI"; }
+      else if (dti <= DTI_RULE) { tone = "warn"; label = "Stretch — between 36% comfort and 45% max DTI"; }
+      else { tone = "bad"; label = "Stretched — above 45% DTI minimum threshold"; }
+    }
+
+    $("pi").textContent = money(pi);
+    $("taxM").textContent = money(taxM);
+    $("insM").textContent = money(insM);
+    $("hoaM").textContent = money(hoaM);
+    $("pmiM").textContent = money(displayPmi);
+    $("pmiRow").style.display = (displayPmi > 0 || (price > 0 && loan / price > 0.8)) ? "" : "none";
+    $("extraM").textContent = money(extra);
+    $("extraRow").hidden = extra <= 0;
+    $("housingTotal").textContent = money(displayHousing);
+    $("debtsTotal").textContent = money(debts);
+    if ($("debtsCompactVal")) $("debtsCompactVal").textContent = money(debts);
+    $("allObligations").textContent = money(all);
+    $("leftover").textContent = money(leftover);
+    $("housingSub").textContent =
+      money(loan) + " loan · " + $("rate").value + "% · " + $("term").value + " yr" +
+      (displayPmi > 0 ? " · PMI on" : "");
+
+    $("minMonthly").textContent = money(minMonthly) + " / mo";
+    $("minAnnual").textContent = money(minAnnual) + " / year · fixed 45% rule";
+    $("comfortMonthly").textContent = money(comfortMonthly) + " / mo";
+    $("comfortAnnual").textContent = money(comfortAnnual) + " / year · comfort target";
+    $("minIncomeBox").classList.toggle("short", belowMin);
+    $("minIncomeBox").classList.toggle("primary", !belowMin);
+
+    $("msLabel").textContent = "Monthly housing";
+    $("msHousing").textContent = money(displayHousing);
+    $("msSub").textContent = (belowMin ? "Below 45% min · " : "") + money(loan) + " loan";
+
+    $("housingPctLabel").textContent = (housingRatio * 100).toFixed(1) + "%";
+    $("dtiPctLabel").textContent = (dti * 100).toFixed(1) + "%";
+    $("housingBar").style.width = Math.min((housingRatio / 0.5) * 100, 100) + "%";
+    $("dtiBar").style.width = Math.min((dti / 0.6) * 100, 100) + "%";
+    $("housingBar").style.background = tone === "good" ? "var(--green)" : tone === "warn" ? "var(--amber)" : "var(--red)";
+    $("dtiBar").style.background = dti <= DTI_COMFORT ? "var(--green)" : dti <= DTI_RULE ? "var(--amber)" : "var(--red)";
+
+    setTone($("housingTotal"), tone);
+    setTone($("msHousing"), tone);
+    setTone($("statusPill"), tone);
+    $("statusPill").textContent = label;
+
+    drawSpark(housingRatio);
+    updateBanner();
+    hasResults = price > 0;
+    updateCta();
+  }
+
+  function calcHowMuch() {
+    const income = num("hmIncome");
+    const debts = num("hmDebts");
+    const rate = num("hmRate");
+    const term = parseInt($("hmTerm").value, 10);
+    const downPct = Math.max(0, Math.min(num("hmDownPct"), 95)) / 100;
+    const taxRate = num("hmTaxRate") / 100;
+    const insRate = num("hmInsRate") / 100;
+    const hoa = num("hmHoa");
+    const loanFrac = 1 - downPct;
+    const piFactor = payment(1, rate, term);
+
+    function priceAt(dtiTarget) {
+      const budget = Math.max(income * dtiTarget - debts, 0);
+      let variable = loanFrac * piFactor + taxRate / 12 + insRate / 12;
+      if (downPct < 0.2) variable += (loanFrac * PMI_ANNUAL) / 12;
+      const price = variable > 0 ? Math.max((budget - hoa) / variable, 0) : 0;
+      const down = price * downPct;
+      const loan = price - down;
+      const pi = payment(loan, rate, term);
+      const taxM = (price * taxRate) / 12;
+      const insM = (price * insRate) / 12;
+      const pmiM = downPct < 0.2 && price > 0 ? (loan * PMI_ANNUAL) / 12 : 0;
+      const housing = pi + taxM + insM + hoa + pmiM;
+      return { price, down, loan, housing, pmiM };
+    }
+
+    let maxD = priceAt(DTI_RULE);
+    let comfortD = priceAt(DTI_COMFORT);
+
+    if (lastServerCalc && lastServerCalc.mode === "how_much_house") {
+      if (typeof lastServerCalc.maxPrice === "number") {
+        maxD = {
+          price: lastServerCalc.maxPrice,
+          down: (lastServerCalc.max && lastServerCalc.max.down) || maxD.down,
+          loan: (lastServerCalc.max && lastServerCalc.max.loan) || maxD.loan,
+          housing: (lastServerCalc.max && lastServerCalc.max.housingPayment) || maxD.housing,
+          pmiM: (lastServerCalc.max && lastServerCalc.max.pmiMonthly) || maxD.pmiM,
+        };
+      }
+      if (typeof lastServerCalc.comfortPrice === "number") {
+        comfortD = {
+          price: lastServerCalc.comfortPrice,
+          housing: (lastServerCalc.comfort && lastServerCalc.comfort.housingPayment) || comfortD.housing,
+          pmiM: (lastServerCalc.comfort && lastServerCalc.comfort.pmiMonthly) || comfortD.pmiM,
+        };
+      }
+    }
+
+    $("hmMaxPrice").textContent = money(maxD.price);
+    $("hmMaxPriceCard").textContent = money(maxD.price);
+    $("hmComfortPrice").textContent = money(comfortD.price);
+    $("hmMaxSub").textContent = money(maxD.housing) + " / mo housing · " + (downPct * 100).toFixed(0) + "% down";
+    $("hmComfortSub").textContent = money(comfortD.housing || 0) + " / mo housing at 36% DTI";
+    $("hmDownAmt").textContent = money(maxD.down);
+    $("hmLoan").textContent = money(maxD.loan);
+    $("hmHousing").textContent = money(maxD.housing);
+    $("hmPmi").textContent = money(maxD.pmiM || 0);
+
+    const pill = $("hmStatusPill");
+    if (income <= 0) {
+      setTone($("hmMaxPrice"), "warn"); setTone(pill, "warn");
+      pill.textContent = "Add income to estimate";
+    } else {
+      setTone($("hmMaxPrice"), "good"); setTone(pill, "good");
+      pill.textContent = "Max at 45% · comfort at 36%";
+    }
+
+    $("msLabel").textContent = "Max home price";
+    $("msHousing").textContent = money(maxD.price);
+    setTone($("msHousing"), income > 0 ? "good" : "warn");
+    $("msSub").textContent = "Comfort " + money(comfortD.price) + " @ 36% DTI";
+
+    hasResults = income > 0;
+    updateCta();
+  }
+
+  function calc() {
+    if (mode === "how_much_house") calcHowMuch();
+    else calcThisHome();
+  }
+
+  async function postJSON(url, body) {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw Object.assign(new Error(err.error || res.statusText), { status: res.status, body: err });
+    }
+    return res.json();
+  }
+
+  function scheduleServerCalc() {
+    clearTimeout(calcServerTimer);
+    calcServerTimer = setTimeout(async () => {
+      try {
+        let result;
+        if (mode === "how_much_house") {
+          result = await postJSON("/api/calc", {
+            sessionId, device, mode: "how_much_house",
+            income: num("hmIncome"),
+            otherMonthlyDebts: num("hmDebts"),
+            downPct: num("hmDownPct"),
+            rate: num("hmRate"),
+            term: parseInt($("hmTerm").value, 10),
+            taxRatePct: num("hmTaxRate"),
+            insRatePct: num("hmInsRate"),
+            hoaMonthly: num("hmHoa"),
+            log: false,
+          });
+        } else {
+          result = await postJSON("/api/calc", {
+            sessionId, device, mode: "this_home",
+            address: $("address").value,
+            price: num("price"), down: num("down"),
+            rate: num("rate"), term: parseInt($("term").value, 10),
+            taxAnnual: num("tax"), insuranceAnnual: num("ins"),
+            hoaMonthly: num("hoa"), pmiMonthly: num("pmi"),
+            extraPrincipal: num("extraPrincipal"),
+            otherMonthlyDebts: debtsTotal(), income: num("income"),
+            log: false,
+          });
+        }
+        lastServerCalc = result;
+        calc();
+      } catch (e) { /* client calc still works */ }
+    }, 400);
+  }
+
+  function scheduleEditEvent() {
+    if (suppressEditLog) return;
+    clearTimeout(editTimer);
+    editTimer = setTimeout(() => {
+      const debts = debtsTotal();
+      const price = num("price");
+      const down = Math.min(num("down"), price);
+      const loan = Math.max(price - down, 0);
+      const housing = payment(loan, num("rate"), parseInt($("term").value, 10))
+        + num("tax") / 12 + num("ins") / 12 + num("hoa") + num("pmi") + num("extraPrincipal");
+      fetch("/api/events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "edit", sessionId, device, address: $("address").value,
+          payload: {
+            mode, price, down, rate: num("rate"), term: parseInt($("term").value, 10),
+            tax: num("tax"), ins: num("ins"), hoa: num("hoa"), pmi: num("pmi"),
+            extraPrincipal: num("extraPrincipal"), income: num("income"),
+            otherMonthlyDebts: debts, autofilled,
+            minMonthlyIncomePreview: (housing + debts) / 0.45,
+            comfortMonthlyIncomePreview: (housing + debts) / 0.36,
+          },
+        }),
+      }).catch(() => {});
+    }, 800);
+  }
+
+  function closeSuggest() {
+    const list = $("suggestList");
+    if (list) list.classList.remove("open");
+    activeIndex = -1;
+  }
+
+  function escapeHtml(str) {
+    return String(str || "")
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  function renderSuggest(items) {
+    const list = $("suggestList");
+    lastSuggestions = items || [];
+    activeIndex = -1;
+    if (!lastSuggestions.length) {
+      list.innerHTML = '<div class="typeahead-empty">No matches in demo inventory</div>';
+      list.classList.add("open");
+      return;
+    }
+    list.innerHTML = lastSuggestions.map((s, i) =>
+      '<button type="button" class="typeahead-item" role="option" data-idx="' + i + '" id="sug-' + i + '">' +
+      escapeHtml(s.label) +
+      "<small>" + escapeHtml([s.city, s.state, s.zip].filter(Boolean).join(" · ")) + "</small></button>"
+    ).join("");
+    list.classList.add("open");
+    list.querySelectorAll(".typeahead-item").forEach((btn) => {
+      btn.addEventListener("click", () => pickSuggestion(Number(btn.dataset.idx)));
+    });
+  }
+
+  async function runSuggest(q) {
+    if (!q || q.trim().length < 2) { closeSuggest(); return; }
+    try {
+      const url = "/api/suggest?q=" + encodeURIComponent(q) +
+        "&sessionId=" + encodeURIComponent(sessionId) +
+        "&device=" + encodeURIComponent(device);
+      const res = await fetch(url);
+      if (!res.ok) return;
+      const items = await res.json();
+      if ($("address").value.trim() !== q.trim()) return;
+      renderSuggest(items);
+    } catch (e) {}
+  }
+
+  async function pickSuggestion(idx) {
+    const s = lastSuggestions[idx];
+    if (!s) return;
+    closeSuggest();
+    suppressEditLog = true;
+    $("address").value = s.label;
+    try {
+      const data = await postJSON("/api/lookup", { id: s.id, address: s.label, sessionId, device });
+      applyLookup(data);
+    } catch (e) {}
+    finally { suppressEditLog = false; }
+  }
+
+  function applyLookup(data) {
+    suppressEditLog = true;
+    pmiUserEdited = false;
+    $("address").value = data.address || $("address").value;
+    if (data.price != null) $("price").value = Math.round(data.price);
+    if (data.price != null) $("down").value = Math.round(data.price * 0.1);
+    if (data.taxAnnual != null) $("tax").value = Math.round(data.taxAnnual);
+    if (data.insuranceAnnual != null) $("ins").value = Math.round(data.insuranceAnnual);
+    if (data.hoaMonthly != null) $("hoa").value = Math.round(data.hoaMonthly);
+    autofilled = true;
+    autofillSnapshot = {
+      price: num("price"), down: num("down"), tax: num("tax"), ins: num("ins"), hoa: num("hoa"),
+    };
+    openAdvanced(true);
+    lastServerCalc = null;
+    calc();
+    scheduleServerCalc();
+    suppressEditLog = false;
+    updateBanner();
+  }
+
+  function setMode(next) {
+    mode = next;
+    const isHome = mode === "this_home";
+    $("modeThisHome").classList.toggle("active", isHome);
+    $("modeHowMuch").classList.toggle("active", !isHome);
+    $("modeThisHome").setAttribute("aria-selected", isHome ? "true" : "false");
+    $("modeHowMuch").setAttribute("aria-selected", isHome ? "false" : "true");
+    $("wrapThisHome").classList.toggle("active", isHome);
+    $("wrapHowMuch").classList.toggle("active", !isHome);
+    $("resultThisHome").hidden = !isHome;
+    $("resultHowMuch").hidden = isHome;
+    if ($("heroTitle")) {
+      $("heroTitle").textContent = isHome
+        ? "See if the home fits your month."
+        : "How much house can you afford?";
+    }
+    if ($("heroSub")) {
+      $("heroSub").textContent = isHome
+        ? "Payment, taxes, insurance, PMI, and the debts you already carry — in one clear number."
+        : "Income, debts, and down payment → max price at 45% DTI and a comfort price at 36%.";
+    }
+    lastServerCalc = null;
+    if (!isHome) {
+      $("hmIncome").value = $("income").value;
+      $("hmDebts").value = debtsTotal();
+      $("hmRate").value = $("rate").value;
+      $("hmTerm").value = $("term").value;
+      const price = num("price");
+      const down = num("down");
+      if (price > 0) $("hmDownPct").value = Math.round((down / price) * 100);
+    } else {
+      $("income").value = $("hmIncome").value;
+    }
+    calc();
+    scheduleServerCalc();
+    fetch("/api/events", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "mode_switch", sessionId, device, payload: { mode } }),
+    }).catch(() => {});
+  }
+
+  $("modeThisHome").addEventListener("click", () => setMode("this_home"));
+  $("modeHowMuch").addEventListener("click", () => setMode("how_much_house"));
+
+  $("advToggle").addEventListener("click", (e) => {
+    if (e.target.closest(".tip")) return;
+    openAdvanced($("advToggle").getAttribute("aria-expanded") !== "true");
+  });
+  $("hmAdvToggle").addEventListener("click", () => {
+    const open = $("hmAdvToggle").getAttribute("aria-expanded") !== "true";
+    $("hmAdvBody").classList.toggle("open", open);
+    $("hmAdvToggle").setAttribute("aria-expanded", open ? "true" : "false");
+  });
+
+  $("debtsExpandBtn").addEventListener("click", () => {
+    const detail = $("debtsDetail");
+    const open = !detail.classList.contains("open");
+    detail.classList.toggle("open", open);
+    $("debtsExpandBtn").textContent = open ? "Hide categories" : "Edit categories";
+  });
+
+  $("suggestBanner").addEventListener("click", () => {
+    openAdvanced(true);
+    $("tax").focus();
+  });
+
+  $("pmi").addEventListener("input", () => { pmiUserEdited = true; });
+
+  document.querySelectorAll(".tip").forEach((tip) => {
+    tip.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const wasOpen = tip.getAttribute("data-open") === "1";
+      document.querySelectorAll(".tip").forEach((t) => t.setAttribute("data-open", "0"));
+      tip.setAttribute("data-open", wasOpen ? "0" : "1");
+    });
+  });
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".tip")) {
+      document.querySelectorAll(".tip").forEach((t) => t.setAttribute("data-open", "0"));
+    }
+    if (!e.target.closest("#typeahead")) closeSuggest();
+  });
+
+  ["price","down","tax","ins","hoa","pmi","extraPrincipal","rate","term","auto","student","cards","otherDebt","income"]
+    .forEach((id) => {
+      const el = $(id);
+      if (!el) return;
+      el.addEventListener("input", () => {
+        lastServerCalc = null; calc(); scheduleServerCalc(); scheduleEditEvent();
+      });
+    });
+
+  ["hmIncome","hmDebts","hmDownPct","hmRate","hmTerm","hmTaxRate","hmInsRate","hmHoa"]
+    .forEach((id) => {
+      const el = $(id);
+      if (!el) return;
+      el.addEventListener("input", () => {
+        lastServerCalc = null; calc(); scheduleServerCalc();
+      });
+    });
+
+  $("address").addEventListener("input", () => {
+    const q = $("address").value;
+    clearTimeout(suggestTimer);
+    suggestTimer = setTimeout(() => runSuggest(q), 250);
+    scheduleEditEvent();
+  });
+
+  $("address").addEventListener("keydown", (e) => {
+    const list = $("suggestList");
+    if (!list.classList.contains("open") || !lastSuggestions.length) {
+      if (e.key === "Enter") { e.preventDefault(); explicitLookup(); }
+      return;
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      activeIndex = Math.min(activeIndex + 1, lastSuggestions.length - 1);
+      highlightActive();
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      activeIndex = Math.max(activeIndex - 1, 0);
+      highlightActive();
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (activeIndex >= 0) pickSuggestion(activeIndex);
+      else explicitLookup();
+    } else if (e.key === "Escape") closeSuggest();
+  });
+
+  function highlightActive() {
+    Array.from($("suggestList").querySelectorAll(".typeahead-item"))
+      .forEach((el, i) => el.classList.toggle("active", i === activeIndex));
+    const el = $("sug-" + activeIndex);
+    if (el) el.scrollIntoView({ block: "nearest" });
+  }
+
+  async function explicitLookup() {
+    const address = $("address").value.trim();
+    if (!address) return;
+    closeSuggest();
+    suppressEditLog = true;
+    try {
+      const data = await postJSON("/api/lookup", { address, sessionId, device });
+      applyLookup(data);
+    } catch (e) {}
+    finally { suppressEditLog = false; }
+  }
+
+  $("loadDemo").addEventListener("click", () => {
+    suppressEditLog = true;
+    pmiUserEdited = false;
+    $("address").value = "742 Eastern Pkwy, Brooklyn, NY 11213";
+    $("price").value = 875000;
+    $("down").value = 87500;
+    $("tax").value = 8400;
+    $("ins").value = 2800;
+    $("hoa").value = 0;
+    $("extraPrincipal").value = 0;
+    $("rate").value = 6.75;
+    $("term").value = "30";
+    $("auto").value = 485;
+    $("student").value = 265;
+    $("cards").value = 175;
+    $("otherDebt").value = 0;
+    $("income").value = 14500;
+    autofilled = false;
+    autofillSnapshot = null;
+    lastServerCalc = null;
+    calc();
+    scheduleServerCalc();
+    updateBanner();
+    suppressEditLog = false;
+    postJSON("/api/lookup", { address: $("address").value, sessionId, device })
+      .then(applyLookup).catch(() => {});
+  });
+
+  $("alertBtn").addEventListener("click", () => {
+    alert("Scenario saved locally for this session. Email capture stays optional — soft gate only.");
+    fetch("/api/events", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "save_scenario", sessionId, device,
+        address: mode === "this_home" ? $("address").value : null,
+        payload: { mode, softGate: true },
+      }),
+    }).catch(() => {});
+  });
+
+  window.addEventListener("resize", () => { device = detectDevice(); });
+
+  fetch("/api/events", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      type: "session_start", sessionId, device, address: null,
+      payload: {
+        device,
+        viewport: { w: window.innerWidth, h: window.innerHeight },
+        ua: navigator.userAgent,
+      },
+    }),
+  }).catch(() => {});
+
+  $("address").value = "742 Eastern Pkwy, Brooklyn, NY 11213";
+  calc();
+  scheduleServerCalc();
+})();
+
+</script>
+</body>
+</html>

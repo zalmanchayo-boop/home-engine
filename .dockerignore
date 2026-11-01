@@ -1,0 +1,8 @@
+.venv
+.env
+data
+uploads
+__pycache__
+.git
+*.db
+index_mvp_legacy.html
