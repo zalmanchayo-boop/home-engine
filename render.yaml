@@ -2,7 +2,7 @@ services:
   - type: web
     name: home-engine
     runtime: docker
-    plan: starter            # persistent disks require a paid instance
+    plan: 0.5c-512mb       # $7/mo (formerly "starter"); persistent disks require a paid instance
     region: virginia
     healthCheckPath: /api/health
     envVars:
