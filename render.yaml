@@ -14,6 +14,8 @@ services:
         value: "1"
       - key: ADMIN_PASSWORD
         generateValue: true  # read it in Render dashboard > Environment
+      - key: BOOKING_URL
+        value: https://calendar.app.google/u9foEt42dhmBc4er9
       - key: NATIONAL_RATE_FEED_URL
         sync: false
     disk:

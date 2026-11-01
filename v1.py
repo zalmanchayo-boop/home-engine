@@ -12,6 +12,7 @@ DATA_DIR = Path(os.environ.get("DATA_DIR", str(ROOT / "data"))).resolve()
 DB = DATA_DIR / "events.db"  # same DB as server.py
 UPLOAD_DIR = Path(os.environ.get("UPLOAD_DIR", str(DATA_DIR / "uploads"))).resolve()
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+BOOKING_URL = os.environ.get("BOOKING_URL", "").strip() or "https://calendar.app.google/u9foEt42dhmBc4er9"
 COOKIE_SECURE = os.environ.get("COOKIE_SECURE", "0").lower() in ("1", "true", "yes")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 MAX_BYTES = 15 * 1024 * 1024
@@ -130,7 +131,7 @@ def touch(sid: str, req: Request, *, tab=None, level=None, inputs=None, results=
 def config():
     s = get_settings()
     return {"zalmanRate": float(s["zalman_rate"]), "nationalRate": float(s["national_rate"]), "nationalSource": s["national_source"],
-            "rateDate": s["rate_date"], "helocRate": float(s["heloc_rate"]), "creditBuckets": list(CREDIT_ADJ),
+            "rateDate": s["rate_date"], "helocRate": float(s["heloc_rate"]), "creditBuckets": list(CREDIT_ADJ), "bookingUrl": BOOKING_URL,
             "creditAdj": CREDIT_ADJ, "dtiRule": DTI_RULE, "dtiComfort": DTI_COMFORT}
 
 @router.get("/api/v1/geo")
