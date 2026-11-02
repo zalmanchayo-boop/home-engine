@@ -37,7 +37,7 @@ footer{color:#6b7782;font-size:11px;line-height:1.5;margin-top:30px}
 canvas#cf{position:fixed;inset:0;pointer-events:none;z-index:15}
 </style></head><body><canvas id=cf></canvas>
 <div class=wrap>
-<header><div><b>Zalman Chayo</b><br><small>Mortgage Loan Originator · Meadowbrook Financial</small></div><span class=pill id=ratePill>Today's rate</span></header>
+<header><div><b>Zalman Chayo</b><br><small>Mortgage Loan Originator · Meadowbrook Financial</small></div></header>
 <div class=tabs><button class=on data-tab=buy>Buy a home</button><button data-tab=heloc>Tap my equity</button></div>
 <div class=lvl><i class=on></i><i></i><i></i></div><div class=lvlt><span id=lvlName>Level 1 · The payment</span><span id=lvlNext>2 levels to unlock</span></div>
 
@@ -150,7 +150,7 @@ $(p+'Done').innerHTML=`<p class=sub style="margin-top:14px">${b.dataset.i=='call
 document.querySelectorAll('.lvl i').forEach(e=>e.classList.add('on'))})}
 
 (async()=>{cfg=await fetch('/api/v1/config').then(r=>r.json());$('bRate').value=cfg.zalmanRate;$('bRateN').textContent="Zalman's rate "+cfg.rateDate+' · '+(cfg.nationalMode==='manual'?'national avg':(cfg.nationalSource||'national avg').replace(/^National avg/,'national avg'))+' '+cfg.nationalRate+'%';
-if(cfg.bookingUrl)$('bookL').href=cfg.bookingUrl;$('ratePill').textContent="Today's rate "+cfg.zalmanRate+'%';const o=cfg.creditBuckets.map(b=>`<option>${b}</option>`).join('');$('bCredit').innerHTML=o;$('hCredit').innerHTML=o;$('bCredit').value=$('hCredit').value='720-739';
+if(cfg.bookingUrl)$('bookL').href=cfg.bookingUrl;const o=cfg.creditBuckets.map(b=>`<option>${b}</option>`).join('');$('bCredit').innerHTML=o;$('hCredit').innerHTML=o;$('bCredit').value=$('hCredit').value='720-739';
 post('/api/v1/ping',{sessionId:sid,device,tab:'buy'});estBuy(true);heloc1();paintLvl()})();
 $('privL').onclick=e=>{e.preventDefault();toast('Data used only to answer your request')};
 </script></body></html>
