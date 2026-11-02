@@ -617,4 +617,5 @@ async def _guard_admin_apis(request, call_next):
     return await call_next(request)
 
 import ratelimit as _rl
+_rl.load(DB_PATH)
 app.middleware("http")(_rl.middleware)

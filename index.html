@@ -196,4 +196,39 @@ function scan(){document.querySelectorAll('input.money').forEach(hook)}
 scan();new MutationObserver(scan).observe(document.body,{childList:true,subtree:true});
 })();
 </script>
+<div id=ulk class=hide role=dialog aria-modal=true aria-labelledby=ulkT><div class=ulkc>
+<button class=ulkx aria-label=Close>×</button>
+<div class=ulkk>Limit reached</div><h3 id=ulkT>Want more?</h3><p class=h>Enter your name, email and phone to unlock double the lookups.</p>
+<label>Name</label><input id=ulkN autocomplete=name>
+<label>Email</label><input id=ulkE type=email autocomplete=email inputmode=email>
+<label>Phone</label><input id=ulkP type=tel autocomplete=tel inputmode=tel placeholder="(555) 555-5555">
+<input id=ulkW name=website tabindex=-1 autocomplete=off aria-hidden=true style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+<label class=ulkc2><input type=checkbox id=ulkC> I agree Zalman Chayo / Meadowbrook Financial NMLS #177308 may contact me.</label>
+<div class=ulkerr id=ulkErr></div><button class=btn id=ulkGo>Unlock 2× lookups</button></div></div>
+<style>#ulk{position:fixed;inset:0;z-index:40;background:rgba(5,8,13,.72);backdrop-filter:blur(6px);display:flex;align-items:flex-end;justify-content:center}
+#ulk.hide{display:none}.ulkc{position:relative;width:100%;max-width:460px;background:#0f1520;border:1px solid var(--g,#d4b483);border-radius:24px 24px 0 0;padding:26px 22px calc(22px + env(safe-area-inset-bottom));box-shadow:0 -10px 40px rgba(212,180,131,.15)}
+@media(min-width:600px){#ulk{align-items:center}.ulkc{border-radius:24px}}
+.ulkc h3{font-family:"Instrument Serif",Georgia,serif;font-weight:400;font-size:34px;margin:4px 0 6px;color:var(--g,#d4b483)}
+.ulkk{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--g,#d4b483);opacity:.8}
+.ulkx{position:absolute;right:14px;top:10px;background:none;border:0;color:#8a96a8;font-size:28px;cursor:pointer}
+.ulkc2{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:#a9b3c2;margin:14px 0 4px;line-height:1.35}.ulkc2 input{width:auto;margin-top:2px;accent-color:var(--g,#d4b483)}
+.ulkerr{color:#e8a0a0;font-size:13px;min-height:18px}</style>
+<script>
+(function(){
+const sid=()=>localStorage.hae_sid||'';document.cookie='hae_sid='+encodeURIComponent(sid())+';path=/;max-age=31536000;samesite=lax';
+const F=window.fetch.bind(window),M=document.getElementById('ulk'),g=i=>document.getElementById(i);let waiters=[],lim='api',busy=false;
+const P=g('ulkP');P.addEventListener('input',()=>{let d=P.value.replace(/\D/g,'');if(d.length==11&&d[0]=='1')d=d.slice(1);d=d.slice(0,10);P.value=d.length>6?`(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`:d.length>3?`(${d.slice(0,3)}) ${d.slice(3)}`:d});
+function open(l){lim=l||'api';if(!M.classList.contains('hide'))return;g('ulkErr').textContent='';M.classList.remove('hide');setTimeout(()=>g('ulkN').focus(),50)}
+function close(ok){M.classList.add('hide');const w=waiters;waiters=[];w.forEach(f=>f(ok))}
+M.querySelector('.ulkx').onclick=()=>close(false);M.addEventListener('click',e=>{if(e.target===M)close(false)});
+g('ulkGo').onclick=async()=>{if(busy)return;const n=g('ulkN').value.trim(),e=g('ulkE').value.trim(),p=P.value.replace(/\D/g,''),err=g('ulkErr');
+if(!n)return err.textContent='Please enter your name.';if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e))return err.textContent='Please enter a valid email.';
+if(p.length!=10)return err.textContent='Please enter a 10-digit phone.';if(!g('ulkC').checked)return err.textContent='Please check the consent box.';
+busy=true;const b=g('ulkGo');b.textContent='Unlocking…';try{const r=await F('/api/v1/unlock',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:sid(),name:n,email:e,phone:p,consent:1,website:g('ulkW').value,limit:lim})});const j=await r.json().catch(()=>({}));
+if(!r.ok){err.textContent=j.detail||'Something went wrong';return}typeof toast=='function'&&toast('Unlocked: 2× lookups');close(true)}finally{busy=false;b.textContent='Unlock 2× lookups'}};
+window.fetch=async function(u,o){const r=await F(u,o);if(r.status!==429||String(u).includes('/api/v1/unlock'))return r;
+let j={};try{j=await r.clone().json()}catch(e){}if(!j.unlock){typeof toast=='function'&&toast(j.detail?'Easy there! Please wait a bit and try again.':'Please try again later.');return r}
+const ok=await new Promise(res=>{waiters.push(res);open(j.limit)});return ok?F(u,o):r};
+})();
+</script>
 </body></html>

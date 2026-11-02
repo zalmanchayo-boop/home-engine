@@ -4,6 +4,7 @@ import hashlib, hmac, html, json, os, secrets, sqlite3, time
 from pathlib import Path
 from typing import Optional
 import httpx
+from fastapi.responses import JSONResponse as _JR
 from fastapi import APIRouter, File, Form, Request, UploadFile, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse, JSONResponse
 
@@ -32,7 +33,11 @@ def init():
           consent INTEGER DEFAULT 0, call_requested INTEGER DEFAULT 0, intent TEXT);
         CREATE TABLE IF NOT EXISTS uploads(id TEXT PRIMARY KEY, session_id TEXT, kind TEXT, orig_name TEXT,
           stored TEXT, ext TEXT, size INTEGER, ts REAL);
+        CREATE TABLE IF NOT EXISTS leads(id INTEGER PRIMARY KEY AUTOINCREMENT, ts REAL, session_id TEXT, ip TEXT,
+          limit_hit TEXT, name TEXT, email TEXT, phone TEXT);
         """)
+        cols = [r[1] for r in c.execute("PRAGMA table_info(sessions)")]
+        if "unlocked" not in cols: c.execute("ALTER TABLE sessions ADD COLUMN unlocked INTEGER DEFAULT 0")
         defaults = {"zalman_rate": "6.25", "national_rate": "6.30", "national_source": "Mortgage News Daily (placeholder - set by admin)",
                     "heloc_rate": "8.25", "rate_date": time.strftime("%Y-%m-%d")}
         for k, v in defaults.items():
@@ -181,12 +186,13 @@ async def verify(req: Request, sessionId: str = Form(...), tab: str = Form("buy"
     import ratelimit as rl
     if website.strip():  # honeypot: silently drop bots
         return {"ok": True, "uploaded": len([f for f in files if f.filename]), "intent": intent}
-    ip = rl.client_ip(req); nf = len([f for f in files[:12] if f.filename])
+    ip = rl.client_ip(req); sid = sessionId[:64]; nf = len([f for f in files[:12] if f.filename])
     if nf and not rl.disk_ok(UPLOAD_DIR): raise HTTPException(507, "Uploads are paused for a moment. Please call 917-499-9599 or try again later.")
-    if not rl.hit("verify", ip, 5, 3600, peek=True) or not rl.hit("files", ip, 30, 86400, n=nf, peek=True) or (intent == "call" and not rl.hit("call", ip, 3, 3600, peek=True)):
-        return rl.too_many()
-    rl.hit("verify", ip, 5, 3600); rl.hit("files", ip, 30, 86400, n=nf)
-    if intent == "call": rl.hit("call", ip, 3, 3600)
+    if not rl.hit("verify", ip, 5, 3600, peek=True, sid=sid) or not rl.hit("files", ip, 30, 86400, n=nf, peek=True, sid=sid) or (intent == "call" and not rl.hit("call", ip, 3, 3600, peek=True, sid=sid)):
+        which = "call" if intent == "call" and not rl.hit("call", ip, 3, 3600, peek=True, sid=sid) else ("files" if not rl.hit("files", ip, 30, 86400, n=nf, peek=True, sid=sid) else "verify")
+        return rl.too_many(which, ip, sid)
+    rl.hit("verify", ip, 5, 3600, sid=sid); rl.hit("files", ip, 30, 86400, n=nf, sid=sid)
+    if intent == "call": rl.hit("call", ip, 3, 3600, sid=sid)
     if consent not in ("1", "true", "on"): raise HTTPException(400, "consent required")
     if "@" not in email or len(phone.strip()) < 7 or not name.strip(): raise HTTPException(400, "name, email and phone required")
     tab = tab if tab in ("buy", "heloc") else "buy"
@@ -209,6 +215,33 @@ async def verify(req: Request, sessionId: str = Form(...), tab: str = Form("buy"
         c.execute("UPDATE sessions SET contact=?, consent=1, call_requested=MAX(call_requested,?), intent=? WHERE id=?",
                   (json.dumps({"name": name[:120], "email": email[:160], "phone": phone[:40]}), 1 if intent == "call" else 0, intent, sessionId))
     return {"ok": True, "uploaded": len(saved), "intent": intent}
+
+@router.post("/api/v1/unlock")
+async def unlock_endpoint(req: Request):
+    import ratelimit as rl, re
+    try: d = await req.json()
+    except Exception: raise HTTPException(400, "bad request")
+    ip = rl.client_ip(req); sid = str(d.get("sessionId") or rl.sid_of(req))[:64]
+    if not rl.hit("unlock", ip, 3, 3600): return _JR(
+        {"detail": "Too many unlock attempts. Please try again later or call 917-499-9599.", "error": "rate_limited", "unlock": False}, status_code=429)
+    if str(d.get("website") or "").strip(): return {"ok": True}  # honeypot
+    name = str(d.get("name") or "").strip()[:120]; email = str(d.get("email") or "").strip()[:160]
+    phone = re.sub(r"\D", "", str(d.get("phone") or ""))[-15:]
+    if not name or not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email) or len(phone) < 10:
+        raise HTTPException(400, "Please enter your name, a valid email and a 10-digit phone.")
+    if str(d.get("consent")) not in ("1", "true", "True", "on"): raise HTTPException(400, "Please check the consent box.")
+    limit = str(d.get("limit") or "api")[:20]
+    with con() as c:
+        c.execute("INSERT INTO leads(ts,session_id,ip,limit_hit,name,email,phone) VALUES(?,?,?,?,?,?,?)",
+                  (time.time(), sid, ip, limit, name, email, phone))
+    if sid:
+        touch(sid, req)
+        with con() as c:
+            c.execute("UPDATE sessions SET unlocked=1, consent=1, contact=COALESCE(contact, ?) WHERE id=?",
+                      (json.dumps({"name": name, "email": email, "phone": phone}), sid))
+    already = rl.is_unlocked(ip, sid)
+    if not already: rl.unlock(ip, sid)
+    return {"ok": True, "doubled": not already}
 
 # ---------- national rate (auto) ----------
 # Default: Freddie Mac PMMS 30-yr fixed, weekly, via FRED (public, no key). Optional override feed via
@@ -339,6 +372,9 @@ def render_admin():
         sess = c.execute("SELECT * FROM sessions ORDER BY call_requested DESC, (contact IS NOT NULL) DESC, last_seen DESC LIMIT 500").fetchall()
         ups = {}
         for u in c.execute("SELECT * FROM uploads ORDER BY ts"): ups.setdefault(u["session_id"], []).append(u)
+        leads = c.execute("SELECT * FROM leads ORDER BY ts DESC LIMIT 500").fetchall()
+    lrows = "".join(f"<tr><td>{time.strftime('%m/%d %I:%M%p', time.localtime(l['ts']))}</td><td>{e(l['name'])}</td><td>{e(l['email'])}</td>"
+                    f"<td>{e(l['phone'])}</td><td>{e(l['limit_hit'])}</td><td>{e(l['ip'])}</td><td>{e((l['session_id'] or '')[:8])}</td></tr>" for l in leads)
     f = st["funnel"]; base = f["visits"] or 1
     funnel = "".join(f"<div class=card><b>{f[k]}</b><span>{lab} · {round(100*f[k]/base)}%</span></div>"
                      for k, lab in (("visits", "Sessions"), ("L1", "Level 1"), ("L2", "Level 2"), ("L3", "Level 3 verify"), ("call", "Call requests")))
@@ -346,7 +382,8 @@ def render_admin():
     trs = []
     for r in sess:
         ct = json.loads(r["contact"]) if r["contact"] else None
-        flag = "<span class=flag>CALL</span>" if r["call_requested"] else ("<span class=flag2>VERIFIED</span>" if ct else "")
+        flag = "<span class=flag>CALL</span>" if r["call_requested"] else ("<span class=flag2>VERIFIED</span>" if ct and r["level"] >= 3 else "")
+        if r["unlocked"]: flag += "<span class=flag3>Unlocked via limit</span>"
         files = "".join(f"<a href='/admin/file/{u['id']}'>{e(u['kind'])}: {e(u['orig_name'])}</a><br>" for u in ups.get(r["id"], []))
         trs.append(f"<tr class={'hot' if r['call_requested'] else ''}><td>{flag}{time.strftime('%m/%d %I:%M%p', time.localtime(r['last_seen']))}</td>"
                    f"<td>{e(r['device'] or '')}</td><td>{e(r['tab'] or '')}</td><td>L{r['level']}</td>"
@@ -358,7 +395,7 @@ def render_admin():
 .row{{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 24px}}.card{{background:#141b22;border-radius:14px;padding:14px 18px;min-width:120px}}
 .card b{{display:block;font-size:28px}}.card span{{color:#8a9aa8;font-size:13px}}table{{width:100%;border-collapse:collapse;font-size:13px}}
 td,th{{border-bottom:1px solid #222c36;padding:8px;vertical-align:top;text-align:left}}tr.hot{{background:#10261a}}
-.flag{{background:#00c805;color:#000;border-radius:6px;padding:2px 6px;font-weight:700;margin-right:6px}}.flag2{{background:#327AA3;border-radius:6px;padding:2px 6px;margin-right:6px}}
+.flag{{background:#00c805;color:#000;border-radius:6px;padding:2px 6px;font-weight:700;margin-right:6px}}.flag3{{background:#d4b483;color:#000;border-radius:6px;padding:2px 6px;margin-right:6px;font-weight:700}}.flag2{{background:#327AA3;border-radius:6px;padding:2px 6px;margin-right:6px}}
 pre{{white-space:pre-wrap;max-width:420px;font-size:11px}}input{{padding:10px;border-radius:10px;border:0;margin:4px}}button{{padding:10px 16px;border-radius:10px;border:0;background:#00c805;font-weight:700}}</style>
 <h1>Home Engine admin <a style=font-size:13px href=/admin/logout>log out</a></h1>
 <form method=post action=/admin/rates class=card>Today's rate ({e(s['rate_date'])}):
@@ -368,4 +405,5 @@ Source <input name=national_source value="{e(s['national_source'])}" size=30> HE
 <form method=post action=/admin/refresh-national style=margin-top:8px><button style=background:#327AA3;color:#fff>Pull national avg from feed</button>
 <small> (Freddie Mac PMMS via FRED; switches back to auto)</small></form>
 <h3>Funnel</h3><div class=row>{funnel}</div><h3>Devices</h3><div class=row>{devs}</div>
+<h3>Leads (unlocked via limit)</h3><table><tr><th>When</th><th>Name</th><th>Email</th><th>Phone</th><th>Limit hit</th><th>IP</th><th>Session</th></tr>{lrows or "<tr><td colspan=7>None yet</td></tr>"}</table>
 <h3>Sessions (call requests first)</h3><table><tr><th>Last seen</th><th>Device</th><th>Tab</th><th>Level</th><th>Contact</th><th>Data</th><th>Uploads</th></tr>{''.join(trs)}</table>"""
