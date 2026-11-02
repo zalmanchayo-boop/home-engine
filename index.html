@@ -44,9 +44,9 @@ canvas#cf{position:fixed;inset:0;pointer-events:none;z-index:15}
 /* typography: reference match */
 body,button,input,select,textarea{font-family:"Inter Tight",Inter,system-ui,sans-serif!important;letter-spacing:-.005em}
 *{font-weight:inherit}b,strong,.btn,.tabs button,.seg button,.pill,.toast{font-weight:500!important}
-.serif,.big,h1,h2,h3,header b,.rows div span:last-child,.tiers b,input[type=number],input[inputmode=decimal],input[inputmode=numeric],output,.val{font-family:"Instrument Serif",Georgia,serif!important;font-weight:400!important;font-variant-numeric:lining-nums tabular-nums;letter-spacing:0}
+.serif,.big,h1,h2,h3,header b,.rows div span:last-child,.tiers b,input[type=number],input[inputmode=decimal],input[inputmode=decimal],output,.val{font-family:"Instrument Serif",Georgia,serif!important;font-weight:400!important;font-variant-numeric:lining-nums tabular-nums;letter-spacing:0}
 header b{font-size:22px}.card h3{font-size:26px;font-weight:400}.rows div span:last-child{font-size:20px;color:var(--t)}.tiers b{font-size:28px}
-input,select{font-size:16px;font-weight:400}input[type=number],input[inputmode=decimal],input[inputmode=numeric]{font-size:22px;padding:12px 15px}
+input,select{font-size:16px;font-weight:400}input[type=number],input[inputmode=decimal],input[inputmode=decimal]{font-size:22px;padding:12px 15px}
 .btn{font-size:16px}
 </style></head><body><canvas id=cf></canvas>
 <div class=wrap>
@@ -59,16 +59,16 @@ input,select{font-size:16px;font-weight:400}input[type=number],input[inputmode=d
 <div class=hero><div class=k>Estimated monthly payment</div><div class="big good" id=bBig>$0</div><div class=sub id=bSub>Plug in a home to start</div></div>
 <div class=card><h3>Level 1 · Pick a home</h3><p class=h>Any address. We estimate taxes and insurance. Edit anything.</p>
 <label>Property address</label><div class=sug><input id=bAddr placeholder="Start typing an address" autocomplete=off><ul id=bSug></ul></div>
-<div class=two><div><label>Price</label><input id=bPrice inputmode=numeric value=650000></div><div><label>Down payment %</label><input id=bDownPct inputmode=decimal value=10></div></div>
-<div class=two><div><label>Property tax / yr</label><input id=bTax inputmode=numeric><div class=est id=bTaxN>Estimate, edit anytime</div></div>
-<div><label>Insurance / yr</label><input id=bIns inputmode=numeric><div class=est id=bInsN>Estimate, edit anytime</div></div></div>
-<div class=two><div><label>HOA / month</label><input id=bHoa inputmode=numeric value=0></div><div><label>Rate %</label><input id=bRate inputmode=decimal><div class=est id=bRateN></div></div></div>
+<div class=two><div><label>Price</label><input id=bPrice class=money inputmode=decimal value=650000></div><div><label>Down payment %</label><input id=bDownPct inputmode=decimal value=10></div></div>
+<div class=two><div><label>Property tax / yr</label><input id=bTax class=money inputmode=decimal><div class=est id=bTaxN>Estimate, edit anytime</div></div>
+<div><label>Insurance / yr</label><input id=bIns class=money inputmode=decimal><div class=est id=bInsN>Estimate, edit anytime</div></div></div>
+<div class=two><div><label>HOA / month</label><input id=bHoa class=money inputmode=decimal value=0></div><div><label>Rate %</label><input id=bRate inputmode=decimal><div class=est id=bRateN></div></div></div>
 <div class=rows id=bRows style="margin-top:14px"></div>
 <button class=btn id=toL2b>Find your real rate →</button></div>
 
 <div class="card locked" id=bL2><h3>Level 2 · Your buying power</h3><p class=h>No name or email needed. Just ballpark numbers.</p>
 <label>Estimated credit score</label><select id=bCredit></select>
-<label>Gross income / month</label><input id=bInc inputmode=numeric placeholder="e.g. 12000"><label style="margin-top:16px">Monthly debts</label><div class=two><div><label>Auto loan</label><input id=bAuto class=dbt data-p=b inputmode=numeric placeholder="0"></div><div><label>Student loans</label><input id=bStu class=dbt data-p=b inputmode=numeric placeholder="0"></div><div><label>Credit cards (total min. payments)</label><input id=bCc class=dbt data-p=b inputmode=numeric placeholder="0"></div><div><label>Other</label><input id=bOth class=dbt data-p=b inputmode=numeric placeholder="0"></div></div><input id=bDebt type=hidden value=0><div class=rows><div><span>Total monthly debts</span><span id=bDebtTot>$0</span></div></div>
+<label>Gross income / month</label><input id=bInc class=money inputmode=decimal placeholder="e.g. 12000"><label style="margin-top:16px">Monthly debts</label><div class=two><div><label>Auto loan</label><input id=bAuto class="money dbt" data-p=b inputmode=decimal placeholder="0"></div><div><label>Student loans</label><input id=bStu class="money dbt" data-p=b inputmode=decimal placeholder="0"></div><div><label>Credit cards (total min. payments)</label><input id=bCc class="money dbt" data-p=b inputmode=decimal placeholder="0"></div><div><label>Other</label><input id=bOth class="money dbt" data-p=b inputmode=decimal placeholder="0"></div></div><input id=bDebt type=hidden value=0><div class=rows><div><span>Total monthly debts</span><span id=bDebtTot>$0</span></div></div>
 <div id=bL2out></div><button class=btn id=toL3b>Verify my buying power →</button></div>
 
 <div class="card locked" id=bL3></div>
@@ -79,13 +79,13 @@ input,select{font-size:16px;font-weight:400}input[type=number],input[inputmode=d
 <div class=hero><div class=k>You could borrow up to</div><div class="big good" id=hBig>$0</div><div class=sub id=hSub>At 85% combined loan-to-value</div></div>
 <div class=card><h3>Level 1 · Your home's equity</h3><p class=h>How much can I borrow against my home?</p>
 <label>Property address</label><div class=sug><input id=hAddr placeholder="Your home address" autocomplete=off><ul id=hSug></ul></div>
-<div class=two><div><label>Estimated value</label><input id=hVal inputmode=numeric value=900000></div><div><label>1st mortgage balance</label><input id=hBal inputmode=numeric value=400000></div></div>
-<label>1st mortgage payment / month</label><input id=hPay inputmode=numeric value=3200>
+<div class=two><div><label>Estimated value</label><input id=hVal class=money inputmode=decimal value=900000></div><div><label>1st mortgage balance</label><input id=hBal class=money inputmode=decimal value=400000></div></div>
+<label>1st mortgage payment / month</label><input id=hPay class=money inputmode=decimal value=3200>
 <div class=tiers id=hTiers style="margin-top:14px"></div><div class=sub style="margin-top:8px" id=hNote></div>
 <button class=btn id=toL2h>Check if I qualify →</button></div>
 <div class="card locked" id=hL2><h3>Level 2 · Can you carry it?</h3><p class=h>Ballpark numbers. No contact info.</p>
 <label>Estimated credit score</label><select id=hCredit></select>
-<label>Gross income / month</label><input id=hInc inputmode=numeric><label style="margin-top:16px">Monthly debts</label><div class=two><div><label>Auto loan</label><input id=hAuto class=dbt data-p=h inputmode=numeric placeholder="0"></div><div><label>Student loans</label><input id=hStu class=dbt data-p=h inputmode=numeric placeholder="0"></div><div><label>Credit cards (total min. payments)</label><input id=hCc class=dbt data-p=h inputmode=numeric placeholder="0"></div><div><label>Other</label><input id=hOth class=dbt data-p=h inputmode=numeric placeholder="0"></div></div><input id=hDebt type=hidden value=0><div class=rows><div><span>Total monthly debts</span><span id=hDebtTot>$0</span></div></div>
+<label>Gross income / month</label><input id=hInc class=money inputmode=decimal><label style="margin-top:16px">Monthly debts</label><div class=two><div><label>Auto loan</label><input id=hAuto class="money dbt" data-p=h inputmode=decimal placeholder="0"></div><div><label>Student loans</label><input id=hStu class="money dbt" data-p=h inputmode=decimal placeholder="0"></div><div><label>Credit cards (total min. payments)</label><input id=hCc class="money dbt" data-p=h inputmode=decimal placeholder="0"></div><div><label>Other</label><input id=hOth class="money dbt" data-p=h inputmode=decimal placeholder="0"></div></div><input id=hDebt type=hidden value=0><div class=rows><div><span>Total monthly debts</span><span id=hDebtTot>$0</span></div></div>
 <div id=hL2out></div><button class=btn id=toL3h>Verify how much I can borrow →</button></div>
 <div class="card locked" id=hL3></div>
 </section>
@@ -164,13 +164,13 @@ function renderL3(t){const p=t[0],isH=t=='heloc';$(p+'L3').innerHTML=`<h3>Level 
 ${isH?`${fr('mortgage_statement','Mortgage statement','Most recent · PDF, JPG, PNG','house',0)}`:''}
 <label>How do you earn?</label><div class="seg gold"><button class=on data-e=w2>W-2 employee</button><button data-e=self>Self-employed</button></div>
 <div id=${p}W2>${fr('w2','W-2s','Last 2 years · PDF, JPG, PNG','doc',1)}${fr('paystub','Recent paystubs','Last 30 days · PDF, JPG, PNG','stub',1)}${fr('tax_return','Tax returns','Last 2 years · PDF, JPG, PNG','doc',1)}</div>
-<div id=${p}SE class=hide>${fr('bank_statement','Business bank statements','12–24 months · PDF, JPG, PNG','bank',1)}<label>Or: estimated monthly business cash flow</label><input id=${p}Cash inputmode=numeric placeholder="e.g. 25000"></div>
+<div id=${p}SE class=hide>${fr('bank_statement','Business bank statements','12–24 months · PDF, JPG, PNG','bank',1)}<label>Or: estimated monthly business cash flow</label><input id=${p}Cash class=money inputmode=decimal placeholder="e.g. 25000"></div>
 <label>Full name</label><input id=${p}Name autocomplete=name><div class=two><div><label>Email</label><input id=${p}Email type=email autocomplete=email></div><div><label>Phone</label><input id=${p}Phone type=tel autocomplete=tel></div></div>
 <label class=consent><input type=checkbox id=${p}Consent><span>I agree Zalman Chayo / Meadowbrook Financial Mortgage Bankers Corp. (NMLS #177308) may store my information and documents and contact me by phone, text or email about my request. Consent is not a condition of any loan. Estimates only, not a commitment to lend.</span></label>
 <button class=btn data-i=verified>Get my verified buying power</button><button class="btn blue" data-i=call>Request a call with Zalman</button><div id=${p}Done></div>`;
 const box=$(p+'L3');let emp='w2';box.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{box.querySelectorAll('.seg button').forEach(x=>x.classList.toggle('on',x==b));emp=b.dataset.e;$(p+'W2').classList.toggle('hide',emp!='w2');$(p+'SE').classList.toggle('hide',emp=='w2')});
 box.querySelectorAll('button[data-i]').forEach(b=>b.onclick=async()=>{if(!$(p+'Consent').checked){toast('Please check the consent box');return}
-const fd=new FormData(),kinds=[];[['sessionId',sid],['tab',t],['device',device],['name',$(p+'Name').value],['email',$(p+'Email').value],['phone',$(p+'Phone').value],['consent','1'],['intent',b.dataset.i],['employment',emp],['cashflow',$(p+'Cash').value]].forEach(([k,v])=>fd.append(k,v));
+const fd=new FormData(),kinds=[];[['sessionId',sid],['tab',t],['device',device],['name',$(p+'Name').value],['email',$(p+'Email').value],['phone',$(p+'Phone').value],['consent','1'],['intent',b.dataset.i],['employment',emp],['cashflow',String(n($(p+'Cash').value)||'')]].forEach(([k,v])=>fd.append(k,v));
 box.querySelectorAll('input[type=file]').forEach(f=>{if(f.closest('.hide'))return;[...f.files].forEach(x=>{if(x.size>15*1024*1024){toast(x.name+' is over 15MB');throw 0}fd.append('files',x);kinds.push(f.dataset.kind)})});fd.append('kinds',kinds.join(','));
 b.disabled=true;b.textContent='Sending…';const r=await fetch('/api/v1/verify',{method:'POST',body:fd});const j=await r.json();b.disabled=false;
 if(!r.ok){b.textContent='Try again';toast(j.detail||'Something went wrong');return}confetti();b.textContent='Done ✓';
@@ -184,4 +184,16 @@ $('privL').onclick=e=>{e.preventDefault();toast('Data used only to answer your r
 </script><script>
 function dbk(p){const g=k=>+(String(document.getElementById(p+k).value).replace(/[^0-9.]/g,''))||0;return{auto:g('Auto'),student:g('Stu'),creditCards:g('Cc'),other:g('Oth')}}
 document.querySelectorAll('.dbt').forEach(el=>el.addEventListener('input',()=>{const p=el.dataset.p,b=dbk(p),t=b.auto+b.student+b.creditCards+b.other,h=document.getElementById(p+'Debt');h.value=t;document.getElementById(p+'DebtTot').textContent='$'+Math.round(t).toLocaleString();h.dispatchEvent(new Event('input',{bubbles:true}));h.dispatchEvent(new Event('change',{bubbles:true}))}));
-</script></body></html>
+</script><script>
+(function(){
+const P=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value');
+function fmt(v){v=String(v==null?'':v).replace(/[^0-9.]/g,'');const d=v.indexOf('.');let i=d<0?v:v.slice(0,d),f=d<0?null:v.slice(d+1).replace(/\./g,'').slice(0,2);i=i.replace(/^0+(?=\d)/,'');if(i===''&&f!==null)i='0';return i.replace(/\B(?=(\d{3})+(?!\d))/g,',')+(f!==null?'.'+f:'');}
+function hook(el){if(el._m)return;el._m=1;el.type='text';el.setAttribute('inputmode','decimal');el.autocomplete='off';
+Object.defineProperty(el,'value',{get(){return P.get.call(this)},set(v){P.set.call(this,fmt(v))},configurable:true});
+el.value=P.get.call(el);
+el.addEventListener('input',()=>{const o=P.get.call(el),c=el.selectionStart==null?o.length:el.selectionStart;const k=o.slice(0,c).replace(/[^0-9.]/g,'').length;const nv=fmt(o);P.set.call(el,nv);let p=0,seen=0;while(p<nv.length&&seen<k){if(/[0-9.]/.test(nv[p]))seen++;p++}try{el.setSelectionRange(p,p)}catch(e){}},true);}
+function scan(){document.querySelectorAll('input.money').forEach(hook)}
+scan();new MutationObserver(scan).observe(document.body,{childList:true,subtree:true});
+})();
+</script>
+</body></html>
