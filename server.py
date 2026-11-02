@@ -615,3 +615,6 @@ async def _guard_admin_apis(request, call_next):
     if request.url.path in ("/api/events", "/api/stats") and request.method == "GET" and not _v1.authed(request):
         return JSONResponse({"error": "admin only"}, status_code=401)
     return await call_next(request)
+
+import ratelimit as _rl
+app.middleware("http")(_rl.middleware)

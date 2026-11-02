@@ -177,7 +177,16 @@ async def ping(req: Request):
 @router.post("/api/v1/verify")
 async def verify(req: Request, sessionId: str = Form(...), tab: str = Form("buy"), name: str = Form(...), email: str = Form(...),
                  phone: str = Form(...), consent: str = Form(...), intent: str = Form("verified"), employment: str = Form(""),
-                 cashflow: str = Form(""), device: str = Form(""), files: list[UploadFile] = File(default=[]), kinds: str = Form("")):
+                 cashflow: str = Form(""), device: str = Form(""), files: list[UploadFile] = File(default=[]), kinds: str = Form(""), website: str = Form("")):
+    import ratelimit as rl
+    if website.strip():  # honeypot: silently drop bots
+        return {"ok": True, "uploaded": len([f for f in files if f.filename]), "intent": intent}
+    ip = rl.client_ip(req); nf = len([f for f in files[:12] if f.filename])
+    if nf and not rl.disk_ok(UPLOAD_DIR): raise HTTPException(507, "Uploads are paused for a moment. Please call 917-499-9599 or try again later.")
+    if not rl.hit("verify", ip, 5, 3600, peek=True) or not rl.hit("files", ip, 30, 86400, n=nf, peek=True) or (intent == "call" and not rl.hit("call", ip, 3, 3600, peek=True)):
+        return rl.too_many()
+    rl.hit("verify", ip, 5, 3600); rl.hit("files", ip, 30, 86400, n=nf)
+    if intent == "call": rl.hit("call", ip, 3, 3600)
     if consent not in ("1", "true", "on"): raise HTTPException(400, "consent required")
     if "@" not in email or len(phone.strip()) < 7 or not name.strip(): raise HTTPException(400, "name, email and phone required")
     tab = tab if tab in ("buy", "heloc") else "buy"
