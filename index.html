@@ -21,7 +21,7 @@ input,select{width:100%;background:#000;border:1px solid var(--line);color:#fff;
 input:focus,select:focus{border-color:var(--g)}.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .est{font-size:11px;color:var(--warn);margin-top:4px}
 .sug{position:relative}.sug ul{position:absolute;z-index:5;left:0;right:0;top:100%;margin:4px 0;padding:0;list-style:none;background:#1a1f24;border-radius:14px;overflow:hidden}
-.sug li{padding:14px;border-bottom:1px solid var(--line);cursor:pointer;font-size:14px}.sug li small{color:var(--mut);display:block}
+.sug li{padding:14px;border-bottom:1px solid var(--line);cursor:pointer;font-size:14px}.sug li small{color:var(--mut);display:block}.pac-container{background:#1a1f24;border:0;border-radius:14px;color:inherit}.pac-item{color:inherit;border-color:var(--line)}
 .rows div{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:15px}.rows div span:first-child{color:var(--mut)}
 .btn{display:block;width:100%;border:0;border-radius:999px;padding:17px;font:800 16px Inter;cursor:pointer;margin-top:14px;background:var(--g);color:#000;transition:transform .1s}
 .btn:active{transform:scale(.97)}.btn.alt{background:#fff}.btn.blue{background:var(--blue);color:#fff}.btn.ghost{background:none;border:1px solid var(--line);color:#fff}
@@ -98,10 +98,22 @@ document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.que
 
 // address typeahead: demo listings + keyless US Census geocoder
 function typeahead(inp,ul,onPick){let tm;inp.oninput=()=>{clearTimeout(tm);const q=inp.value.trim();if(q.length<3){ul.innerHTML='';return}
-tm=setTimeout(async()=>{const [d,g]=await Promise.all([fetch('/api/suggest?q='+encodeURIComponent(q)+'&sessionId='+sid+'&device='+device).then(r=>r.json()).catch(()=>({results:[]})),
+tm=setTimeout(async()=>{if(window.GP){try{const items=await gSuggest(q);if(items){render(items);return}}catch(e){}}
+const [d,g]=await Promise.all([fetch('/api/suggest?q='+encodeURIComponent(q)+'&sessionId='+sid+'&device='+device).then(r=>r.json()).catch(()=>({results:[]})),
 q.length>=6?fetch('/api/v1/geo?q='+encodeURIComponent(q)).then(r=>r.json()).catch(()=>({results:[]})):{results:[]}]);
 const items=[...g.results.map(r=>({label:r.label,sub:'Verified US address',state:r.state,zip:r.zip})),...(d.results||[]).slice(0,4).map(r=>({label:r.label,sub:'Sample listing',id:r.id,state:r.state,zip:r.zip}))];
-ul.innerHTML='';items.forEach(it=>{const li=document.createElement('li');li.innerHTML=it.label+'<small>'+it.sub+'</small>';li.onclick=()=>{inp.value=it.label;ul.innerHTML='';onPick(it)};ul.appendChild(li)})},350)}}
+render(items)},350)};
+function render(items){ul.innerHTML='';items.forEach(it=>{const li=document.createElement('li');li.innerHTML=it.label+'<small>'+it.sub+'</small>';li.onclick=async()=>{inp.value=it.label;ul.innerHTML='';if(it.pp){try{const r=await gPick(it.pp);inp.value=r.label;it=r}catch(e){}}onPick(it)};ul.appendChild(li)})}}
+// Google Places (New) autocomplete, used only when GOOGLE_MAPS_API_KEY is set; falls back to Census on any error
+let gTok=null;
+async function gSuggest(q){const {AutocompleteSuggestion,AutocompleteSessionToken}=window.GP;gTok=gTok||new AutocompleteSessionToken();
+const {suggestions}=await AutocompleteSuggestion.fetchAutocompleteSuggestions({input:q,includedRegionCodes:['us'],sessionToken:gTok});
+const items=suggestions.filter(x=>x.placePrediction).slice(0,5).map(x=>{const p=x.placePrediction;return{label:p.text.toString(),sub:'Google Maps',pp:p}});return items.length?items:null}
+async function gPick(pp){const pl=pp.toPlace();await pl.fetchFields({fields:['addressComponents','formattedAddress','location']});gTok=null;
+const c=t=>(pl.addressComponents||[]).find(a=>a.types.includes(t));const st=c('administrative_area_level_1'),z=c('postal_code');
+return{label:(pl.formattedAddress||'').replace(/, USA$/,''),sub:'Google Maps',state:st?st.shortText:undefined,zip:z?z.longText:undefined,lat:pl.location&&pl.location.lat(),lng:pl.location&&pl.location.lng()}}
+function loadGoogle(key){if(!key)return;window.__gmInit=async()=>{try{window.GP=await google.maps.importLibrary('places')}catch(e){}};
+const s=document.createElement('script');s.async=true;s.src='https://maps.googleapis.com/maps/api/js?key='+encodeURIComponent(key)+'&libraries=places&loading=async&callback=__gmInit';document.head.appendChild(s)}
 typeahead($('bAddr'),$('bSug'),async it=>{loc.buy=it;if(it.id){const d=await post('/api/lookup',{id:it.id,sessionId:sid,device});const L=d.listing||d;if(L.price)$('bPrice').value=L.price;
 if(L.hoaMonthly!=null)$('bHoa').value=L.hoaMonthly}await estBuy(true)});
 typeahead($('hAddr'),$('hSug'),it=>{loc.heloc=it;heloc1()});
@@ -149,7 +161,7 @@ if(!r.ok){b.textContent='Try again';toast(j.detail||'Something went wrong');retu
 $(p+'Done').innerHTML=`<p class=sub style="margin-top:14px">${b.dataset.i=='call'?'Zalman will call you shortly, or grab a time now:<br><a class="btn blue" style="display:inline-block;margin-top:10px;text-decoration:none" target=_blank rel=noopener href="'+(cfg.bookingUrl||'https://calendar.app.google/u9foEt42dhmBc4er9')+'">Pick a time</a><br>':'Got it. Zalman will review your documents and send your verified number.'} ${j.uploaded} file(s) received securely. Questions? 917-499-9599</p>`;
 document.querySelectorAll('.lvl i').forEach(e=>e.classList.add('on'))})}
 
-(async()=>{cfg=await fetch('/api/v1/config').then(r=>r.json());$('bRate').value=cfg.zalmanRate;$('bRateN').textContent=(cfg.nationalMode==='manual'?'National avg 30-yr':(cfg.nationalSource||'National avg 30-yr').replace(/^national avg/,'National avg'))+': '+cfg.nationalRate+'%';
+(async()=>{cfg=await fetch('/api/v1/config').then(r=>r.json());loadGoogle(cfg.googleMapsKey);$('bRate').value=cfg.zalmanRate;$('bRateN').textContent=(cfg.nationalMode==='manual'?'National avg 30-yr':(cfg.nationalSource||'National avg 30-yr').replace(/^national avg/,'National avg'))+': '+cfg.nationalRate+'%';
 if(cfg.bookingUrl)$('bookL').href=cfg.bookingUrl;const o=cfg.creditBuckets.map(b=>`<option>${b}</option>`).join('');$('bCredit').innerHTML=o;$('hCredit').innerHTML=o;$('bCredit').value=$('hCredit').value='720-739';
 post('/api/v1/ping',{sessionId:sid,device,tab:'buy'});estBuy(true);heloc1();paintLvl()})();
 $('privL').onclick=e=>{e.preventDefault();toast('Data used only to answer your request')};

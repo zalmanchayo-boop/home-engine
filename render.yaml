@@ -18,6 +18,8 @@ services:
         value: https://calendar.app.google/u9foEt42dhmBc4er9
       - key: NATIONAL_RATE_FEED_URL
         sync: false
+      - key: GOOGLE_MAPS_API_KEY
+        sync: false  # browser key, HTTP-referrer restricted
     disk:
       name: data
       mountPath: /var/data

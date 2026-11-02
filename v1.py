@@ -132,7 +132,7 @@ def config():
     if time.time() - _last_try[0] >= REFRESH_SECS: refresh_national()
     s = get_settings()
     return {"zalmanRate": float(s["zalman_rate"]), "nationalRate": float(s["national_rate"]), "nationalSource": s["national_source"],
-            "rateDate": s["rate_date"], "nationalAsOf": s.get("national_asof", ""), "nationalMode": s.get("national_mode", "auto"), "helocRate": float(s["heloc_rate"]), "creditBuckets": list(CREDIT_ADJ), "bookingUrl": BOOKING_URL,
+            "rateDate": s["rate_date"], "nationalAsOf": s.get("national_asof", ""), "nationalMode": s.get("national_mode", "auto"), "helocRate": float(s["heloc_rate"]), "creditBuckets": list(CREDIT_ADJ), "bookingUrl": BOOKING_URL, "googleMapsKey": os.environ.get("GOOGLE_MAPS_API_KEY", "").strip(),
             "creditAdj": CREDIT_ADJ, "dtiRule": DTI_RULE, "dtiComfort": DTI_COMFORT}
 
 @router.get("/api/v1/geo")
