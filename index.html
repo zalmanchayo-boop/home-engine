@@ -134,7 +134,7 @@ taxAnnual:n($('bTax').value),insuranceAnnual:n($('bIns').value),hoaMonthly:n($('
 credit:$('bCredit').value,income:n($('bInc').value),debts:n($('bDebt').value),debtBreakdown:dbk('b')}}
 let bt;function buy1(){clearTimeout(bt);bt=setTimeout(async()=>{const L=lvl.buy>=2?2:1;const r=await post('/api/v1/step',{sessionId:sid,device,tab:'buy',level:L,inputs:buyIn()});
 countTo($('bBig'),r.housing);$('bSub').textContent=$$(r.loan)+' loan · '+(r.rateUsed||n($('bRate').value)).toFixed(3)+'% · '+pct(r.ltv)+' LTV';
-$('bRows').innerHTML=[['Principal & interest',r.pi],['Property tax',r.tax],['Insurance',r.ins],['HOA',r.hoa],['PMI'+(r.pmi?' (under 20% down)':''),r.pmi]].map(([a,b])=>`<div><span>${a}</span><span>${$$(b)}</span></div>`).join('')+
+$('bRows').innerHTML=[['Principal & interest',r.pi],['Property tax',r.tax],['Insurance',r.ins],['HOA',r.hoa],['PMI'+(r.pmi?' (conventional, '+r.pmiRatePct.toFixed(2)+'%/yr'+(r.pmiEstimated?' est.':'')+')<br><small style=opacity:.6>drops off at 78-80% LTV</small>':''),r.pmi]].map(([a,b])=>`<div><span>${a}</span><span>${$$(b)}</span></div>`).join('')+
 `<div><span>Min income needed (45% DTI)</span><span><b>${$$(r.minIncome)}/mo</b></span></div>`;
 if(L>=2&&n($('bInc').value)){const tone=r.dti<=.36?'good':r.dti<=.45?'warn':'bad';$('bBig').className='big '+tone;
 $('bL2out').innerHTML=`<div class=hero><div class=k>Your buying power (45% DTI)</div><div class="big good">${$$(r.maxPrice)}</div><div class=sub>Comfort zone (36%): ${$$(r.comfortPrice)} · This home puts you at <b>${pct(r.dti)}</b> DTI</div></div>

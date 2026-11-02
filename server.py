@@ -23,7 +23,8 @@ DB_PATH = DATA_DIR / "events.db"
 # Dual DTI bands: 45% = minimum required income rule; 36% = comfort band
 DTI_RULE = 0.45
 DTI_COMFORT = 0.36
-# PMI heuristic: ~0.7% of loan amount annually when LTV > 80% (Bankrate-style mid-range)
+from pmi import pmi_rate
+# Legacy PMI constant (unused by default; grid in pmi.py): ~0.7% of loan amount annually when LTV > 80% (Bankrate-style mid-range)
 PMI_ANNUAL_RATE = 0.007
 LTV_PMI_THRESHOLD = 0.80
 
@@ -120,7 +121,7 @@ def payment(principal: float, annual_rate_pct: float, years: int) -> float:
     return principal * (r * (1 + r) ** n) / ((1 + r) ** n - 1)
 
 
-def estimate_pmi_monthly(loan: float, price: float, pmi_override: Optional[float] = None) -> float:
+def estimate_pmi_monthly(loan: float, price: float, pmi_override: Optional[float] = None, bucket: Optional[str] = None) -> float:
     """Return monthly PMI. Auto-zero when LTV <= 80%. Override lets UI edit the amount."""
     if price <= 0 or loan <= 0:
         return 0.0
@@ -129,7 +130,7 @@ def estimate_pmi_monthly(loan: float, price: float, pmi_override: Optional[float
         return 0.0
     if pmi_override is not None:
         return max(float(pmi_override), 0.0)
-    return loan * PMI_ANNUAL_RATE / 12.0
+    return loan * pmi_rate(ltv, bucket) / 1200.0
 
 
 def compute_calc(data: dict[str, Any]) -> dict[str, Any]:
@@ -156,8 +157,9 @@ def compute_calc(data: dict[str, Any]) -> dict[str, Any]:
     pi = payment(loan, rate, term)
     tax_m = tax / 12.0
     ins_m = ins / 12.0
-    pmi_m = estimate_pmi_monthly(loan, price, pmi_override)
-    pmi_auto = estimate_pmi_monthly(loan, price, None)
+    bucket = data.get("credit")
+    pmi_m = estimate_pmi_monthly(loan, price, pmi_override, bucket)
+    pmi_auto = estimate_pmi_monthly(loan, price, None, bucket)
     pmi_required = ltv > LTV_PMI_THRESHOLD
 
     housing = pi + tax_m + ins_m + hoa + pmi_m + extra_principal
@@ -202,6 +204,7 @@ def compute_calc(data: dict[str, Any]) -> dict[str, Any]:
         "pmiMonthly": round(pmi_m, 2),
         "pmiAuto": round(pmi_auto, 2),
         "pmiRequired": pmi_required,
+        "pmiRatePct": pmi_rate(ltv, bucket),
         "extraPrincipal": round(extra_principal, 2),
         "housingPayment": round(housing, 2),
         "otherMonthlyDebts": round(debts, 2),
@@ -240,9 +243,10 @@ def compute_max_price(data: dict[str, Any]) -> dict[str, Any]:
     ins_fixed = float(data.get("insuranceAnnual") or 0)
     use_fixed_tax = tax_fixed > 0 and data.get("taxRatePct") is None
     use_fixed_ins = ins_fixed > 0 and data.get("insRatePct") is None
-    pmi_annual = float(data.get("pmiAnnualRate") or (PMI_ANNUAL_RATE * 100)) / 100.0
-    if data.get("pmiAnnualRate") is None:
-        pmi_annual = PMI_ANNUAL_RATE
+    # Conventional BPMI grid (pmi.py) by LTV band + credit bucket; explicit pmiAnnualRate (%) still overrides
+    pmi_annual = pmi_rate(1.0 - down_pct, data.get("credit")) / 100.0
+    if data.get("pmiAnnualRate") not in (None, ""):
+        pmi_annual = float(data.get("pmiAnnualRate")) / 100.0
 
     loan_frac = 1.0 - down_pct
     # Monthly PI factor per $1 of loan
@@ -311,7 +315,7 @@ def compute_max_price(data: dict[str, Any]) -> dict[str, Any]:
         "comfortPrice": comfort_detail["price"],
         "max": max_detail,
         "comfort": comfort_detail,
-        "pmiHeuristic": f"{pmi_annual * 100:.2f}% of loan / year when LTV > 80%",
+        "pmiHeuristic": f"conventional BPMI {pmi_annual * 100:.2f}%/yr of loan when LTV > 80% (drops off at 78-80% LTV)",
     }
 
 
@@ -348,6 +352,7 @@ class CalcBody(BaseModel):
     otherMonthlyDebts: float = 0
     income: float = 0
     pmiMonthly: Optional[float] = None  # None = auto
+    credit: Optional[str] = None  # credit bucket for conventional PMI grid (default 720-739 est.)
     extraPrincipal: float = 0
     housingCap: float = 31
     dtiCap: float = 43

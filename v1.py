@@ -66,6 +66,8 @@ def estimate_costs(price: float, state: str = "", zip_: str = ""):
             "taxPct": tax_pct, "insPct": ins_pct, "taxNote": tax_note,
             "insNote": f"{state or 'US'} heuristic {ins_pct:.2f}% of value", "label": "Estimate - edit anytime"}
 
+from pmi import pmi_rate, BUCKETS
+
 CREDIT_ADJ = {"760+": 0.0, "740-759": 0.125, "720-739": 0.25, "700-719": 0.375, "680-699": 0.625,
               "660-679": 0.875, "640-659": 1.25, "620-639": 1.75, "<620": 2.75}
 
@@ -79,17 +81,18 @@ def buy_calc(d: dict):
     rate = float(d.get("rate") or 0); term = int(d.get("term") or 30)
     loan = price - down; ltv = loan / price if price else 0
     pi = pmt(loan, rate, term); tax = float(d.get("taxAnnual") or 0) / 12; ins = float(d.get("insuranceAnnual") or 0) / 12
-    hoa = float(d.get("hoaMonthly") or 0); pmi = loan * 0.007 / 12 if ltv > 0.8 else 0
+    hoa = float(d.get("hoaMonthly") or 0)
+    pb = d.get("pmiCredit"); pmi_r = pmi_rate(ltv, pb); pmi = loan * pmi_r / 1200
     housing = pi + tax + ins + hoa + pmi
     debts = float(d.get("debts") or 0); income = float(d.get("income") or 0)
-    out = {"loan": loan, "ltv": ltv, "pi": pi, "tax": tax, "ins": ins, "hoa": hoa, "pmi": pmi, "housing": housing,
+    out = {"loan": loan, "ltv": ltv, "pi": pi, "tax": tax, "ins": ins, "hoa": hoa, "pmi": pmi, "pmiRatePct": pmi_r, "pmiEstimated": pb not in BUCKETS, "housing": housing,
            "minIncome": (housing + debts) / DTI_RULE, "comfortIncome": (housing + debts) / DTI_COMFORT}
     if income > 0:
         out["dti"] = (housing + debts) / income
         # buying power at 45% and 36%: same down %, same tax/ins % of price
         dp = down / price if price else 0.1
         tpct = (tax * 12 / price) if price else 0.01; ipct = (ins * 12 / price) if price else 0.004
-        f = (1 - dp) * pmt(1, rate, term) + tpct / 12 + ipct / 12 + ((1 - dp) * 0.007 / 12 if dp < 0.2 else 0)
+        f = (1 - dp) * pmt(1, rate, term) + tpct / 12 + ipct / 12 + ((1 - dp) * pmi_rate(1 - dp, pb) / 1200)
         out["maxPrice"] = max(income * DTI_RULE - debts - hoa, 0) / f if f else 0
         out["comfortPrice"] = max(income * DTI_COMFORT - debts - hoa, 0) / f if f else 0
     return {k: (round(v, 4) if isinstance(v, float) else v) for k, v in out.items()}
@@ -161,7 +164,7 @@ async def step(req: Request):
     adj = CREDIT_ADJ.get(bucket, 0.0) if lvl >= 2 else 0.0
     if tab == "buy":
         if lvl >= 2 and bucket: inp = {**inp, "rate": float(inp.get("baseRate") or s["zalman_rate"]) + adj}
-        res = buy_calc(inp); res["rateUsed"] = inp.get("rate"); res["creditAdj"] = adj
+        res = buy_calc({**inp, "pmiCredit": bucket if lvl >= 2 else None}); res["rateUsed"] = inp.get("rate"); res["creditAdj"] = adj
     else:
         res = heloc_calc(inp, float(s["heloc_rate"]) + adj); res["creditAdj"] = adj
     touch(d.get("sessionId"), req, tab=tab, level=lvl, inputs=inp, results=res, device=d.get("device"))
