@@ -601,7 +601,7 @@ if __name__ == "__main__":
 
 # ---- v1 launch layer ----
 import v1 as _v1
-_v1.init()
+_v1.init(); _v1._bg_refresh()
 app.include_router(_v1.router)
 
 @app.middleware("http")

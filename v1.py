@@ -129,9 +129,10 @@ def touch(sid: str, req: Request, *, tab=None, level=None, inputs=None, results=
 
 @router.get("/api/v1/config")
 def config():
+    if time.time() - _last_try[0] >= REFRESH_SECS: refresh_national()
     s = get_settings()
     return {"zalmanRate": float(s["zalman_rate"]), "nationalRate": float(s["national_rate"]), "nationalSource": s["national_source"],
-            "rateDate": s["rate_date"], "helocRate": float(s["heloc_rate"]), "creditBuckets": list(CREDIT_ADJ), "bookingUrl": BOOKING_URL,
+            "rateDate": s["rate_date"], "nationalAsOf": s.get("national_asof", ""), "nationalMode": s.get("national_mode", "auto"), "helocRate": float(s["heloc_rate"]), "creditBuckets": list(CREDIT_ADJ), "bookingUrl": BOOKING_URL,
             "creditAdj": CREDIT_ADJ, "dtiRule": DTI_RULE, "dtiComfort": DTI_COMFORT}
 
 @router.get("/api/v1/geo")
@@ -197,14 +198,62 @@ async def verify(req: Request, sessionId: str = Form(...), tab: str = Form("buy"
                   (json.dumps({"name": name[:120], "email": email[:160], "phone": phone[:40]}), 1 if intent == "call" else 0, intent, sessionId))
     return {"ok": True, "uploaded": len(saved), "intent": intent}
 
-# ---------- national rate hook ----------
+# ---------- national rate (auto) ----------
+# Default: Freddie Mac PMMS 30-yr fixed, weekly, via FRED (public, no key). Optional override feed via
+# NATIONAL_RATE_FEED_URL (JSON {"rate":6.31,"source":"...","asOf":"YYYY-MM-DD"}), e.g. a licensed MND feed.
+# Admin manual entry sets national_mode=manual; "Pull national avg" switches back to auto.
+FRED_URL = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=MORTGAGE30US"
+PMMS_URL = "https://www.freddiemac.com/pmms/docs/PMMS_history.csv"
+REFRESH_SECS = 6 * 3600
+_last_try = [0.0]
+
+def _fmt_week(d):
+    try: return time.strftime("%b %-d, %Y", time.strptime(d, "%Y-%m-%d"))
+    except Exception: return d
+
+def _from_fred():
+    r = httpx.get(FRED_URL, timeout=8, follow_redirects=True); r.raise_for_status()
+    for line in reversed(r.text.strip().splitlines()[1:]):
+        d, v = line.split(",")[:2]
+        if v not in (".", ""): return float(v), d
+    raise ValueError("no data")
+
+def _from_pmms():
+    r = httpx.get(PMMS_URL, timeout=8, follow_redirects=True); r.raise_for_status()
+    rows = r.text.strip().splitlines(); hdr = [h.strip().lower() for h in rows[0].split(",")]
+    i = hdr.index("pmms30")
+    for line in reversed(rows[1:]):
+        f = line.split(",")
+        if len(f) > i and f[i].strip():
+            m, d, y = f[0].split("/"); return float(f[i]), f"{y}-{int(m):02d}-{int(d):02d}"
+    raise ValueError("no data")
+
 def fetch_national():
-    """Placeholder hook. Set NATIONAL_RATE_FEED_URL to a JSON endpoint returning {"rate": 6.31, "source": "..."}.
-    Zalman will provide the feed; adapt parsing here."""
+    """Returns (rate, source_label, as_of) or None."""
     url = os.environ.get("NATIONAL_RATE_FEED_URL", "").strip()
-    if not url: return None
-    r = httpx.get(url, timeout=8); j = r.json()
-    return float(j["rate"]), j.get("source", url)
+    if url:
+        try:
+            j = httpx.get(url, timeout=8).json(); asof = j.get("asOf", time.strftime("%Y-%m-%d"))
+            return float(j["rate"]), j.get("source", "Custom feed"), asof
+        except Exception: pass
+    for fn in (_from_fred, _from_pmms):
+        try:
+            rate, d = fn(); return rate, f"National avg 30-yr (Freddie Mac PMMS, week of {_fmt_week(d)})", d
+        except Exception: continue
+    return None
+
+def refresh_national(force=False):
+    s = get_settings()
+    if not force and s.get("national_mode", "auto") == "manual": return
+    if not force and time.time() - _last_try[0] < REFRESH_SECS: return
+    _last_try[0] = time.time()
+    got = fetch_national()
+    if got:
+        set_setting("national_rate", got[0]); set_setting("national_source", got[1])
+        set_setting("national_asof", got[2]); set_setting("national_mode", "auto")
+
+def _bg_refresh():
+    import threading; threading.Thread(target=refresh_national, daemon=True).start()
 
 # ---------- admin ----------
 def _pw(): return os.environ.get("ADMIN_PASSWORD", "")
@@ -236,16 +285,17 @@ def admin_logout():
 def admin_rates(req: Request, zalman_rate: str = Form(...), national_rate: str = Form(""), national_source: str = Form(""), heloc_rate: str = Form("")):
     if not authed(req): raise HTTPException(401)
     set_setting("zalman_rate", float(zalman_rate)); set_setting("rate_date", time.strftime("%Y-%m-%d"))
-    if national_rate: set_setting("national_rate", float(national_rate))
-    if national_source: set_setting("national_source", national_source[:200])
+    if national_rate and abs(float(national_rate) - float(get_settings()["national_rate"])) > 1e-9:
+        set_setting("national_rate", float(national_rate)); set_setting("national_mode", "manual")
+        set_setting("national_source", (national_source or "Set by admin")[:200]); set_setting("national_asof", time.strftime("%Y-%m-%d"))
+    elif national_source and national_source != get_settings()["national_source"]: set_setting("national_source", national_source[:200])
     if heloc_rate: set_setting("heloc_rate", float(heloc_rate))
     return RedirectResponse("/admin", 303)
 
 @router.post("/admin/refresh-national")
 def admin_refresh(req: Request):
     if not authed(req): raise HTTPException(401)
-    got = fetch_national()
-    if got: set_setting("national_rate", got[0]); set_setting("national_source", got[1])
+    refresh_national(force=True)
     return RedirectResponse("/admin", 303)
 
 @router.get("/admin/file/{fid}")
@@ -304,6 +354,6 @@ pre{{white-space:pre-wrap;max-width:420px;font-size:11px}}input{{padding:10px;bo
 Source <input name=national_source value="{e(s['national_source'])}" size=30> HELOC rate <input name=heloc_rate value="{e(s['heloc_rate'])}" size=6>
 <button>Save</button></form>
 <form method=post action=/admin/refresh-national style=margin-top:8px><button style=background:#327AA3;color:#fff>Pull national avg from feed</button>
-<small> (needs NATIONAL_RATE_FEED_URL)</small></form>
+<small> (Freddie Mac PMMS via FRED; switches back to auto)</small></form>
 <h3>Funnel</h3><div class=row>{funnel}</div><h3>Devices</h3><div class=row>{devs}</div>
 <h3>Sessions (call requests first)</h3><table><tr><th>Last seen</th><th>Device</th><th>Tab</th><th>Level</th><th>Contact</th><th>Data</th><th>Uploads</th></tr>{''.join(trs)}</table>"""
