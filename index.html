@@ -1,7 +1,7 @@
 <!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>What can you afford? | Zalman Chayo, Meadowbrook Financial</title>
 <meta name=description content="Plug in any address. See the real monthly payment, your buying power, and how much you can pull from your home.">
-<link rel=preconnect href=https://fonts.googleapis.com><link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Inter:wght@400;500;600&display=swap" rel=stylesheet>
+<link rel=preconnect href=https://fonts.googleapis.com><link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Inter+Tight:wght@400;500;600&display=swap" rel=stylesheet>
 <style>
 :root{--bg:#000;--card:#111417;--line:#1f252b;--mut:#8b98a5;--g:#00c805;--blue:#327AA3;--warn:#ffb020;--bad:#ff5000;--t:#fff}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:var(--bg);color:var(--t);font-family:Inter,system-ui,sans-serif}
@@ -35,6 +35,14 @@ input:focus,select:focus{border-color:var(--g)}.two{display:grid;grid-template-c
 footer{color:#6b7782;font-size:11px;line-height:1.5;margin-top:30px}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--g);color:#000;font-weight:600;padding:14px 22px;border-radius:999px;opacity:0;transition:.4s;z-index:20}.toast.on{opacity:1;bottom:40px}
 canvas#cf{position:fixed;inset:0;pointer-events:none;z-index:15}
+
+/* typography: reference match */
+body,button,input,select,textarea{font-family:"Inter Tight",Inter,system-ui,sans-serif!important;letter-spacing:-.005em}
+*{font-weight:inherit}b,strong,.btn,.tabs button,.seg button,.pill,.toast{font-weight:500!important}
+.serif,.big,h1,h2,h3,header b,.rows div span:last-child,.tiers b,input[type=number],input[inputmode=decimal],input[inputmode=numeric],output,.val{font-family:"Instrument Serif",Georgia,serif!important;font-weight:400!important;font-variant-numeric:lining-nums tabular-nums;letter-spacing:0}
+header b{font-size:22px}.card h3{font-size:26px;font-weight:400}.rows div span:last-child{font-size:20px;color:var(--t)}.tiers b{font-size:28px}
+input,select{font-size:16px;font-weight:400}input[type=number],input[inputmode=decimal],input[inputmode=numeric]{font-size:22px;padding:12px 15px}
+.btn{font-size:16px}
 </style></head><body><canvas id=cf></canvas>
 <div class=wrap>
 <header><div><b>Zalman Chayo</b><br><small>Mortgage Loan Originator · Meadowbrook Financial</small></div></header>
@@ -55,7 +63,7 @@ canvas#cf{position:fixed;inset:0;pointer-events:none;z-index:15}
 
 <div class="card locked" id=bL2><h3>Level 2 · Your buying power</h3><p class=h>No name or email needed. Just ballpark numbers.</p>
 <label>Estimated credit score</label><select id=bCredit></select>
-<div class=two><div><label>Gross income / month</label><input id=bInc inputmode=numeric placeholder="e.g. 12000"></div><div><label>Monthly debts</label><input id=bDebt inputmode=numeric placeholder="car, cards, loans"></div></div>
+<label>Gross income / month</label><input id=bInc inputmode=numeric placeholder="e.g. 12000"><label style="margin-top:16px">Monthly debts</label><div class=two><div><label>Auto loan</label><input id=bAuto class=dbt data-p=b inputmode=numeric placeholder="0"></div><div><label>Student loans</label><input id=bStu class=dbt data-p=b inputmode=numeric placeholder="0"></div><div><label>Credit cards (total min. payments)</label><input id=bCc class=dbt data-p=b inputmode=numeric placeholder="0"></div><div><label>Other</label><input id=bOth class=dbt data-p=b inputmode=numeric placeholder="0"></div></div><input id=bDebt type=hidden value=0><div class=rows><div><span>Total monthly debts</span><span id=bDebtTot>$0</span></div></div>
 <div id=bL2out></div><button class=btn id=toL3b>Verify my buying power →</button></div>
 
 <div class="card locked" id=bL3></div>
@@ -72,7 +80,7 @@ canvas#cf{position:fixed;inset:0;pointer-events:none;z-index:15}
 <button class=btn id=toL2h>Check if I qualify →</button></div>
 <div class="card locked" id=hL2><h3>Level 2 · Can you carry it?</h3><p class=h>Ballpark numbers. No contact info.</p>
 <label>Estimated credit score</label><select id=hCredit></select>
-<div class=two><div><label>Gross income / month</label><input id=hInc inputmode=numeric></div><div><label>Other monthly debts</label><input id=hDebt inputmode=numeric placeholder="car, cards"></div></div>
+<label>Gross income / month</label><input id=hInc inputmode=numeric><label style="margin-top:16px">Monthly debts</label><div class=two><div><label>Auto loan</label><input id=hAuto class=dbt data-p=h inputmode=numeric placeholder="0"></div><div><label>Student loans</label><input id=hStu class=dbt data-p=h inputmode=numeric placeholder="0"></div><div><label>Credit cards (total min. payments)</label><input id=hCc class=dbt data-p=h inputmode=numeric placeholder="0"></div><div><label>Other</label><input id=hOth class=dbt data-p=h inputmode=numeric placeholder="0"></div></div><input id=hDebt type=hidden value=0><div class=rows><div><span>Total monthly debts</span><span id=hDebtTot>$0</span></div></div>
 <div id=hL2out></div><button class=btn id=toL3h>Verify how much I can borrow →</button></div>
 <div class="card locked" id=hL3></div>
 </section>
@@ -89,7 +97,7 @@ const post=(u,b)=>fetch(u,{method:'POST',headers:{'Content-Type':'application/js
 function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),2200)}
 function confetti(){const c=$('cf'),x=c.getContext('2d');c.width=innerWidth;c.height=innerHeight;let p=[...Array(70)].map(()=>({x:innerWidth/2,y:innerHeight/2,vx:(Math.random()-.5)*12,vy:Math.random()*-12-3,c:['#00c805','#fff','#327AA3'][Math.random()*3|0],l:60}));
 (function f(){x.clearRect(0,0,c.width,c.height);p.forEach(q=>{q.x+=q.vx;q.y+=q.vy;q.vy+=.4;q.l--;x.fillStyle=q.c;x.fillRect(q.x,q.y,6,6)});p=p.filter(q=>q.l>0);if(p.length)requestAnimationFrame(f);else x.clearRect(0,0,c.width,c.height)})();navigator.vibrate&&navigator.vibrate(30)}
-function countTo(el,v){const s=n(el.textContent),t0=performance.now();(function f(t){const k=Math.min((t-t0)/400,1);el.textContent=$$(s+(v-s)*k);if(k<1)requestAnimationFrame(f)})(t0)}
+function countTo(el,v){const s=n(el.textContent),t0=performance.now();(function f(t){const k=Math.max(0,Math.min((t-t0)/400,1));el.textContent=$$(s+(v-s)*k);if(k<1)requestAnimationFrame(f)})(t0)}
 function paintLvl(){const L=lvl[tab];document.querySelectorAll('.lvl i').forEach((e,i)=>e.classList.toggle('on',i<L));
 $('lvlName').textContent=['','Level 1 · '+(tab=='buy'?'The payment':'Your equity'),'Level 2 · '+(tab=='buy'?'Buying power':'Qualify check'),'Level 3 · Verified'][L];
 $('lvlNext').textContent=L<3?(3-L)+' level'+(L==2?'':'s')+' to unlock':'All unlocked ✓'}
@@ -123,7 +131,7 @@ if(force||!$('bIns').dataset.edited){$('bIns').value=e.insuranceAnnual;$('bInsN'
 ['bTax','bIns'].forEach(i=>$(i).addEventListener('input',()=>$(i).dataset.edited=1));
 function buyIn(){const p=n($('bPrice').value);return{address:$('bAddr').value,state:loc.buy.state,zip:loc.buy.zip,price:p,downPct:n($('bDownPct').value),down:p*n($('bDownPct').value)/100,
 taxAnnual:n($('bTax').value),insuranceAnnual:n($('bIns').value),hoaMonthly:n($('bHoa').value),rate:n($('bRate').value),baseRate:n($('bRate').value),
-credit:$('bCredit').value,income:n($('bInc').value),debts:n($('bDebt').value)}}
+credit:$('bCredit').value,income:n($('bInc').value),debts:n($('bDebt').value),debtBreakdown:dbk('b')}}
 let bt;function buy1(){clearTimeout(bt);bt=setTimeout(async()=>{const L=lvl.buy>=2?2:1;const r=await post('/api/v1/step',{sessionId:sid,device,tab:'buy',level:L,inputs:buyIn()});
 countTo($('bBig'),r.housing);$('bSub').textContent=$$(r.loan)+' loan · '+(r.rateUsed||n($('bRate').value)).toFixed(3)+'% · '+pct(r.ltv)+' LTV';
 $('bRows').innerHTML=[['Principal & interest',r.pi],['Property tax',r.tax],['Insurance',r.ins],['HOA',r.hoa],['PMI'+(r.pmi?' (under 20% down)':''),r.pmi]].map(([a,b])=>`<div><span>${a}</span><span>${$$(b)}</span></div>`).join('')+
@@ -135,7 +143,7 @@ $('bL2out').innerHTML=`<div class=hero><div class=k>Your buying power (45% DTI)<
 $('toL2b').onclick=()=>{unlock('buy',2);buy1()};
 $('toL3b').onclick=()=>{if(!n($('bInc').value)){toast('Add your income first');return}renderL3('buy');unlock('buy',3)};
 
-function helocIn(){return{address:$('hAddr').value,state:loc.heloc.state,value:n($('hVal').value),balance:n($('hBal').value),firstPayment:n($('hPay').value),credit:$('hCredit').value,income:n($('hInc').value),debts:n($('hDebt').value)}}
+function helocIn(){return{address:$('hAddr').value,state:loc.heloc.state,value:n($('hVal').value),balance:n($('hBal').value),firstPayment:n($('hPay').value),credit:$('hCredit').value,income:n($('hInc').value),debts:n($('hDebt').value),debtBreakdown:dbk('h')}}
 let ht;function heloc1(){clearTimeout(ht);ht=setTimeout(async()=>{const L=lvl.heloc>=2?2:1;const r=await post('/api/v1/step',{sessionId:sid,device,tab:'heloc',level:L,inputs:helocIn()});
 countTo($('hBig'),r.tiers[1].available);$('hTiers').innerHTML=r.tiers.map(t=>`<div><small>${t.cltv*100}% CLTV</small><b>${$$(t.available)}</b><small>~${$$(t.ioPayment)}/mo IO</small></div>`).join('');
 $('hNote').textContent=`Equity ${$$(r.equity)} · est. HELOC rate ${r.helocRate.toFixed(2)}%, interest-only on full draw`;
@@ -165,4 +173,7 @@ document.querySelectorAll('.lvl i').forEach(e=>e.classList.add('on'))})}
 if(cfg.bookingUrl)$('bookL').href=cfg.bookingUrl;const o=cfg.creditBuckets.map(b=>`<option>${b}</option>`).join('');$('bCredit').innerHTML=o;$('hCredit').innerHTML=o;$('bCredit').value=$('hCredit').value='720-739';
 post('/api/v1/ping',{sessionId:sid,device,tab:'buy'});estBuy(true);heloc1();paintLvl()})();
 $('privL').onclick=e=>{e.preventDefault();toast('Data used only to answer your request')};
+</script><script>
+function dbk(p){const g=k=>+(String(document.getElementById(p+k).value).replace(/[^0-9.]/g,''))||0;return{auto:g('Auto'),student:g('Stu'),creditCards:g('Cc'),other:g('Oth')}}
+document.querySelectorAll('.dbt').forEach(el=>el.addEventListener('input',()=>{const p=el.dataset.p,b=dbk(p),t=b.auto+b.student+b.creditCards+b.other,h=document.getElementById(p+'Debt');h.value=t;document.getElementById(p+'DebtTot').textContent='$'+Math.round(t).toLocaleString();h.dispatchEvent(new Event('input',{bubbles:true}));h.dispatchEvent(new Event('change',{bubbles:true}))}));
 </script></body></html>
