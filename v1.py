@@ -39,7 +39,7 @@ def init():
         cols = [r[1] for r in c.execute("PRAGMA table_info(sessions)")]
         if "unlocked" not in cols: c.execute("ALTER TABLE sessions ADD COLUMN unlocked INTEGER DEFAULT 0")
         defaults = {"zalman_rate": "6.25", "national_rate": "6.30", "national_source": "Mortgage News Daily (placeholder - set by admin)",
-                    "heloc_rate": "8.25", "rate_date": time.strftime("%Y-%m-%d")}
+                    "heloc_rate": "7.99", "rate_date": time.strftime("%Y-%m-%d")}
         for k, v in defaults.items():
             c.execute("INSERT OR IGNORE INTO settings VALUES(?,?,?)", (k, v, time.time()))
 

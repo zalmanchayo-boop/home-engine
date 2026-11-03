@@ -48,6 +48,13 @@ body,button,input,select,textarea{font-family:"Inter Tight",Inter,system-ui,sans
 header b{font-size:22px}.card h3{font-size:26px;font-weight:400}.rows div span:last-child{font-size:20px;color:var(--t)}.tiers b{font-size:28px}
 input,select{font-size:16px;font-weight:400}input[type=number],input[inputmode=decimal],input[inputmode=decimal]{font-size:22px;padding:12px 15px}
 .btn{font-size:16px}
+.hero.eq{position:relative;text-align:center;margin:26px 0 14px;padding:30px 16px 24px;border-radius:24px;background:radial-gradient(120% 90% at 50% 0%,rgba(212,180,131,.20),rgba(212,180,131,.04) 55%,transparent 75%),#0e1420;border:1px solid rgba(212,180,131,.35);box-shadow:0 0 60px rgba(212,180,131,.12) inset,0 10px 40px rgba(0,0,0,.35);overflow:hidden}
+.hero.eq:after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,236,200,.10) 50%,transparent 65%);transform:translateX(-100%);animation:eqsh 3.5s ease-in-out infinite}
+@keyframes eqsh{60%,100%{transform:translateX(100%)}}
+.eqk{font:600 13px "Inter Tight",Inter,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:#d4b483}
+.big.eqbig{font-size:clamp(76px,22vw,124px);line-height:1;margin:10px 0 6px;background:linear-gradient(180deg,#f3dcae 0%,#d4b483 45%,#a8844e 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 22px rgba(212,180,131,.45));animation:eqp 2.8s ease-in-out infinite}
+@keyframes eqp{50%{filter:drop-shadow(0 0 34px rgba(212,180,131,.7))}}
+.eqline{font:500 17px "Inter Tight",Inter,sans-serif;color:#efe3cc;margin-top:4px}.hero.eq .sub{margin-top:8px}
 </style></head><body><canvas id=cf></canvas>
 <div class=wrap>
 <header><div><b>Zalman Chayo</b><br><small>Mortgage Loan Originator · Meadowbrook Financial</small></div></header>
@@ -76,7 +83,7 @@ input,select{font-size:16px;font-weight:400}input[type=number],input[inputmode=d
 
 <!-- HELOC -->
 <section id=heloc class=hide>
-<div class=hero><div class=k>Potential equity to tap</div><div class="big good" id=hBig>$0</div><div class=sub id=hSub>At 85% combined loan-to-value</div></div>
+<div class="hero eq"><div class=eqk>Potential equity to tap</div><div class="big eqbig" id=hBig>$0</div><div class=eqline>Here's what your home could put in your pocket.</div><div class=sub id=hSub>At 85% combined loan-to-value</div></div>
 <div class=card><h3>Level 1 · Your home's equity</h3><p class=h>How much can I borrow against my home?</p>
 <label>Property address</label><div class=sug><input id=hAddr placeholder="Your home address" autocomplete=off><ul id=hSug></ul></div>
 <div class=two><div><label>Estimated value</label><input id=hVal class=money inputmode=decimal value=900000></div><div><label>1st mortgage balance</label><input id=hBal class=money inputmode=decimal value=400000></div></div>
@@ -102,7 +109,7 @@ const post=(u,b)=>fetch(u,{method:'POST',headers:{'Content-Type':'application/js
 function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),2200)}
 function confetti(){navigator.vibrate&&navigator.vibrate(30);if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;const c=$('cf'),x=c.getContext('2d'),d=Math.min(devicePixelRatio||1,2),W=innerWidth,H=innerHeight;c.width=W*d;c.height=H*d;x.setTransform(d,0,0,d,0,0);const cs=getComputedStyle(document.documentElement),cols=['--g','--g1','--g2'].map(v=>cs.getPropertyValue(v).trim()).filter(Boolean);if(!cols.length)cols.push('#d4b483');const N=W<600?26:44,L=70;let p=[...Array(N)].map(()=>({x:W/2,y:H/2,vx:(Math.random()-.5)*11,vy:Math.random()*-12-4,r:Math.random()*6.28,vr:(Math.random()-.5)*.25,s:14+Math.random()*24,c:cols[Math.random()*cols.length|0],l:L}));
 (function f(){x.clearRect(0,0,W,H);p.forEach(q=>{q.x+=q.vx;q.y+=q.vy;q.vy+=.38;q.vx*=.99;q.r+=q.vr;q.l--;x.save();x.globalAlpha=Math.min(1,q.l/(L*.4));x.translate(q.x,q.y);x.rotate(q.r);x.fillStyle=q.c;x.font=q.s+'px "Instrument Serif",Georgia,serif';x.textAlign='center';x.textBaseline='middle';x.fillText('$',0,0);x.restore()});p=p.filter(q=>q.l>0);if(p.length)requestAnimationFrame(f);else x.clearRect(0,0,W,H)})()}
-function countTo(el,v){const s=n(el.textContent),t0=performance.now();(function f(t){const k=Math.max(0,Math.min((t-t0)/400,1));el.textContent=$$(s+(v-s)*k);if(k<1)requestAnimationFrame(f)})(t0)}
+function countTo(el,v){const s=n(el.textContent),t0=performance.now();(function f(t){const k=Math.max(0,Math.min((t-t0)/(el.id=='hBig'?1200:400),1));el.textContent=$$(s+(v-s)*(el.id=='hBig'?1-Math.pow(1-k,3):k));if(k<1)requestAnimationFrame(f)})(t0)}
 function paintLvl(){const L=lvl[tab];document.querySelectorAll('.lvl i').forEach((e,i)=>e.classList.toggle('on',i<L));
 $('lvlName').textContent=['','Level 1 · '+(tab=='buy'?'The payment':'Your equity'),'Level 2 · '+(tab=='buy'?'Buying power':'Qualify check'),'Level 3 · Verified'][L];
 $('lvlNext').textContent=L<3?(3-L)+' level'+(L==2?'':'s')+' to unlock':'All unlocked ✓'}
