@@ -1,5 +1,7 @@
 """v1 launch layer: levels, BUY + HELOC, rates, uploads, admin."""
 from __future__ import annotations
+import os as _o, time as _t
+_o.environ['TZ']='EST5EDT,M3.2.0,M11.1.0'; _t.tzset()
 import hashlib, hmac, html, json, os, secrets, sqlite3, time
 from pathlib import Path
 from typing import Optional
